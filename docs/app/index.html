@@ -37,6 +37,7 @@ window.__TOC_DEFAULT = 'testovuj';
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f1e7">
 <title>Оглавление</title>
 <!-- ═════════════════════════════════════════════════════════════════
      «Оглавление телеграм-канала» · мини-апп
@@ -63,7 +64,7 @@ body{
   font-size:15px; line-height:1.45;
   -webkit-tap-highlight-color:transparent;
 }
-.wrap{max-width:640px;margin:0 auto;padding:14px 14px 30px}
+.wrap{max-width:640px;margin:0 auto;padding:14px 14px calc(30px + env(safe-area-inset-bottom))}
 
 /* ── шапка ── */
 header{display:flex;align-items:center;gap:12px;padding:10px 2px 14px}
@@ -74,11 +75,22 @@ header{display:flex;align-items:center;gap:12px;padding:10px 2px 14px}
 }
 .h-name{font-size:19px;font-weight:700;letter-spacing:.1px}
 .h-sub{font-size:12.5px;color:var(--muted);margin-top:1px}
-.h-open{
-  margin-left:auto;flex:0 0 auto;text-decoration:none;font-size:13px;font-weight:600;
-  color:var(--accent);border:1.5px solid var(--accent);border-radius:11px;padding:7px 12px;
+.h-share{
+  margin-left:auto;flex:0 0 auto;width:36px;height:36px;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  border:1.5px solid var(--line);background:transparent;color:var(--accent);
+  border-radius:11px;font-size:16px;line-height:1;cursor:pointer;
+  user-select:none;-webkit-user-select:none;
+  transition:background .12s ease, transform .12s ease;
 }
-.h-open:active{background:var(--accent-soft)}
+.h-share:active{background:var(--accent-soft);transform:scale(.94)}
+.h-open{
+  flex:0 0 auto;text-decoration:none;font-size:13px;font-weight:600;
+  color:var(--accent);border:1.5px solid var(--accent);border-radius:11px;padding:7px 12px;
+  user-select:none;-webkit-user-select:none;
+  transition:background .12s ease, transform .12s ease;
+}
+.h-open:active{background:var(--accent-soft);transform:scale(.96)}
 
 /* ── поиск ── */
 .search{position:relative;margin-bottom:10px}
@@ -87,11 +99,17 @@ header{display:flex;align-items:center;gap:12px;padding:10px 2px 14px}
   background:var(--search);color:var(--text);font-size:15px;outline:none;
 }
 .search input:focus{border-color:var(--accent)}
+/* iOS рисует свой крестик для type=search — прячем: у нас свой */
+.search input{-webkit-appearance:none;appearance:none}
+.search input::-webkit-search-cancel-button,
+.search input::-webkit-search-decoration{-webkit-appearance:none;display:none}
 .search .ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.55;font-size:15px}
 .search .clr{
   position:absolute;right:6px;top:50%;transform:translateY(-50%);
   border:0;background:transparent;color:var(--muted);font-size:17px;padding:6px 8px;cursor:pointer;display:none;
+  transition:color .12s ease, transform .12s ease;
 }
+.search .clr:active{color:var(--accent);transform:translateY(-50%) scale(.88)}
 
 /* ── темы (чипсы) ── */
 .chips{
@@ -102,16 +120,21 @@ header{display:flex;align-items:center;gap:12px;padding:10px 2px 14px}
 .chip{
   flex:0 0 auto;border:1.5px solid var(--line);background:var(--chip);color:var(--text);
   border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;
+  user-select:none;-webkit-user-select:none;
+  transition:transform .12s ease, border-color .12s ease, color .12s ease, background .12s ease;
 }
+.chip:active{transform:scale(.93)}
 .chip.active{background:var(--chip-active);color:var(--chip-active-text);border-color:var(--chip-active)}
 
 /* ── даты и карточки ── */
 .day{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:16px 2px 8px}
 .card{
+  display:block;color:inherit;text-decoration:none; /* карточка — настоящая ссылка <a> */
   background:var(--card);border:1px solid var(--line);border-radius:15px;
   padding:12px 14px;margin-bottom:9px;box-shadow:var(--shadow);cursor:pointer;
+  transition:background .12s ease, transform .12s ease;
 }
-.card:active{background:var(--card2)}
+.card:active,.card.pressed{background:var(--card2);transform:scale(.985)}
 .c-top{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
 .c-time{font-size:12px;color:var(--muted);flex:0 0 auto}
 .c-title{font-size:15.5px;font-weight:700;line-height:1.35}
@@ -129,25 +152,34 @@ header>div{min-width:0}
 .views button{
   flex:1;border:0;background:transparent;color:var(--muted);
   font-size:13.5px;font-weight:700;padding:8px 0;border-radius:9px;cursor:pointer;
+  user-select:none;-webkit-user-select:none;
+  transition:color .12s ease, background .12s ease;
 }
+.views button:active{color:var(--text)}
 .views button.active{background:var(--chip-active);color:var(--chip-active-text)}
 
-/* ── сетка тем (настоящее оглавление) ── */
-.slabel{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:15px 2px 9px}
+/* ── сетка карточек (корень оглавления и разделы) ── */
 .tgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:4px}
 .tcard{
   background:var(--card);border:1px solid var(--line);border-radius:15px;
   padding:14px;cursor:pointer;box-shadow:var(--shadow);
+  user-select:none;-webkit-user-select:none;
+  transition:background .12s ease, transform .12s ease;
 }
-.tcard:active{background:var(--card2)}
+.tcard:active{background:var(--card2);transform:scale(.96)}
 .t-ico{font-size:25px;line-height:1}
 .t-title{font-size:14.5px;font-weight:700;margin-top:7px;line-height:1.3}
 .t-n{font-size:12px;color:var(--muted);margin-top:3px}
+.slabel{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:15px 2px 9px}
+.tagwrap{display:flex;flex-wrap:wrap;gap:7px;margin:2px 2px 8px}
 .back{
   display:block;width:100%;margin:2px 0 10px;padding:10px;border-radius:12px;
   border:1.5px solid var(--line);background:var(--chip);color:var(--text);
   font-size:13.5px;font-weight:700;cursor:pointer;text-align:center;
+  user-select:none;-webkit-user-select:none;
+  transition:background .12s ease, transform .12s ease;
 }
+.back:active{background:var(--accent-soft);transform:scale(.98)}
 
 
 /* ── состояния ── */
@@ -155,7 +187,10 @@ header>div{min-width:0}
   display:block;width:100%;margin:14px 0 4px;padding:12px;border-radius:13px;
   border:1.5px dashed var(--accent);background:transparent;color:var(--accent);
   font-size:14.5px;font-weight:700;cursor:pointer;
+  user-select:none;-webkit-user-select:none;
+  transition:background .12s ease, transform .12s ease;
 }
+.more:active{background:var(--accent-soft);transform:scale(.98)}
 .state{padding:46px 20px;text-align:center;color:var(--muted)}
 .state .big{font-size:40px;margin-bottom:10px}
 .state .t{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px}
@@ -191,6 +226,9 @@ footer .lic{font-size:11px;opacity:.75}
       <div class="h-name" id="hName">Оглавление</div>
       <div class="h-sub" id="hSub">каталог постов канала</div>
     </div>
+    <button class="h-share" id="hShare" type="button" aria-label="Скопировать ссылку на оглавление" title="Скопировать ссылку">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    </button>
     <a class="h-open" id="hOpen" href="#">Канал</a>
   </header>
 
@@ -212,7 +250,7 @@ footer .lic{font-size:11px;opacity:.75}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала</div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v56-ru</span></div>
     <div class="lic" id="licLine"></div>
   </footer>
 </div>
@@ -292,7 +330,9 @@ function adoptBridge(){
   tg = rawTg; bridgePending = false;
   try { tg.ready(); tg.expand(); } catch(e){}
   themeApply();
-  if (tg.onEvent) { try { tg.onEvent('themeChanged', themeApply); } catch(e){} }
+  headerColorApply();
+  wireTgBack();   /* кнопка «Назад» ставится на старте — при позднем приходе моста ставим снова */
+  if (tg.onEvent) { try { tg.onEvent('themeChanged', function(){ themeApply(); headerColorApply(); }); } catch(e){} }
   var late = document.getElementById('tgBanner');
   if (late && late.parentNode) late.parentNode.removeChild(late);
   diagNote('мост подключён (async): platform=' + (tg.platform || '?') + ' · ver=' + (tg.version || '?'));
@@ -324,11 +364,87 @@ if (bridgePending && !rawTg){
 /* iOS Safari вешает :active только при обработчике touchstart */
 document.addEventListener('touchstart', function(){}, {passive:true});
 
-/* iOS/iPadOS: переходы через target="_blank" и window.open во встроенном
-   браузере Telegram на iPhone блокируются молча — надёжные пути только
-   официальный API мини-аппа или навигация в той же вкладке. */
-var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '') ||
-          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); /* iPadOS 13+ маскируется под Mac */
+/* ── тактильная отдача: HapticFeedback есть в мобильном Telegram;
+   в обычном браузере и на десктопе вызовы молча игнорируются ── */
+function haptic(style){
+  if (tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
+    try { tg.HapticFeedback.impactOccurred(style); } catch(e){}
+  }
+}
+function hapticSelect(){
+  if (tg && tg.HapticFeedback && tg.HapticFeedback.selectionChanged) {
+    try { tg.HapticFeedback.selectionChanged(); } catch(e){}
+  }
+}
+function hapticNotify(type){
+  if (tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) {
+    try { tg.HapticFeedback.notificationOccurred(type); } catch(e){}
+  }
+}
+
+/* ── нативная кнопка «Назад» Telegram: дублирует внутреннюю кнопку «← …» ── */
+var tgBackWired = false;
+function wireTgBack(){
+  if (!tg || !tg.BackButton || tgBackWired) return;
+  tgBackWired = true;
+  try {
+    tg.onEvent('backButtonClicked', function(){
+      var b = document.getElementById('backBtn');
+      if (b && b.style.display !== 'none') b.click();
+    });
+  } catch(e){}
+}
+function updateTgBack(){
+  if (!tg || !tg.BackButton || !tgBackWired) return;
+  var b = document.getElementById('backBtn');
+  var need = !!(b && b.style.display === 'block');
+  try { if (need) tg.BackButton.show(); else tg.BackButton.hide(); } catch(e){}
+}
+
+/* ── тост + копирование ссылки (кнопка «Поделиться» в шапке) ── */
+var toastTimer = null;
+function toast(msg){
+  var t = document.getElementById('toast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));'
+      + 'transform:translateX(-50%) translateY(8px);background:rgba(25,20,10,.88);color:#fff;'
+      + 'font-size:13px;font-weight:600;padding:9px 16px;border-radius:999px;'
+      + 'opacity:0;transition:opacity .18s ease, transform .18s ease;'
+      + 'pointer-events:none;z-index:50;max-width:86%;text-align:center';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(8px)';
+  }, 1900);
+}
+function legacyCopy(text){
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:-999px;left:-999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select(); ta.setSelectionRange(0, text.length);
+    var ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch(e){ return false; }
+}
+function copyText(text, done){
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      function(){ done(true); },
+      function(){ done(legacyCopy(text)); }
+    );
+  } else { done(legacyCopy(text)); }
+}
 
 function themeApply(){
   var p = (tg && tg.themeParams) || {};
@@ -342,7 +458,22 @@ function themeApply(){
     return (0.299*r + 0.587*g + 0.114*b) < 128;
   }
 }
-if (!tg) themeApply();   /* без моста тема по системной настройке; с мостом применил adoptBridge */
+/* шапка Telegram и фон под контентом окрашиваются в тему приложения;
+   meta theme-color — то же для обычного браузера */
+function headerColorApply(){
+  var bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  var m = document.querySelector('meta[name="theme-color"]');
+  if (m && bg) m.setAttribute('content', bg);
+  if (tg && tg.setHeaderColor) { try { tg.setHeaderColor(bg); } catch(e){ try { tg.setHeaderColor('bg_color'); } catch(e2){} } }
+  if (tg && tg.setBackgroundColor) { try { tg.setBackgroundColor(bg); } catch(e){} }
+}
+if (!tg) { themeApply(); headerColorApply(); }   /* без моста тема по системной настройке; с мостом применил adoptBridge */
+
+/* iOS/iPadOS: переходы через target="_blank" и window.open во встроенном
+   браузере Telegram на iPhone блокируются молча — надёжные пути только
+   официальный API мини-аппа или навигация в той же вкладке. */
+var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '') ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); /* iPadOS 13+ маскируется под Mac */
 
 /* ── самодиагностика (Task 120: в футере только строки продукта —
    линия скрыта, видна при ?diag=1, каждая заметка идёт в консоль):
@@ -517,7 +648,6 @@ function normTag(s){ return String(s||'').replace(/^#/,'').toLowerCase(); }
 var POSTS = [];        // все посты (новые сверху)
 var TAGS = [];         // [{tag, n}]
 var TOPICS = null;     // [{id,title,icon,tags[]}] из topics.json (может не быть)
-var TOC_ON = false;    // темы из topics.json реально покрывают посты
 var view = 'feed';     // 'toc' | 'feed'
 var filterTopic = null;// id выбранной темы (режим тем)
 var filterMode = null; // универсальная группировка: 'months' | 'alpha' | 'kind'
@@ -597,6 +727,25 @@ function groupIcon(k){
   return k; // алфавит: буква сама — иконка
 }
 
+/* ── «По темам» (v56-ru): счётчик для карточки корня. Если темы из
+   topics.json покрывают посты — считаются карточки тем (+ «Разное»),
+   иначе — число тегов постов. ── */
+function topicCardCount(){
+  if (TOPICS){
+    var n = 0, covered = 0;
+    TOPICS.forEach(function(t){
+      var c = 0;
+      POSTS.forEach(function(p){ if (topicOf(p) === t.id) c++; });
+      if (c) n++;
+      covered += c;
+    });
+    if (covered > 0){
+      var misc = POSTS.length - covered, total = n + (misc > 0 ? 1 : 0);
+      return { n: total, word: pluralWord(total, ['тема','темы','тем']) };
+    }
+  }
+  return { n: TAGS.length, word: pluralWord(TAGS.length, ['тег','тега','тегов']) };
+}
 /* ── шапка из конфига ── */
 function applyConfig(){
   var name = cfg.channel_name || 'Оглавление';
@@ -606,7 +755,15 @@ function applyConfig(){
   if (cfg.channel_url) {
     var a = document.getElementById('hOpen');
     a.href = cfg.channel_url;
-    a.addEventListener('click', function(ev){ ev.preventDefault(); openUrl(cfg.channel_url); });
+    a.addEventListener('click', function(ev){
+      haptic('light');
+      // мини-апп → openUrl: openTelegramLink, при тихом сбое iOS —
+      // видимый запасной путь через браузер (стратегия живого приложения);
+      // десктоп-браузер без моста → НЕ перехватываем: работает обычный href
+      if (tg || iOS) {
+        ev.preventDefault(); openUrl(cfg.channel_url);
+      }
+    });
   } else { document.getElementById('hOpen').style.display = 'none'; }
   if (cfg.header_emoji) document.getElementById('logo').textContent = cfg.header_emoji;
   var lic = cfg.licensee ? ('экземпляр для: ' + cfg.licensee + (cfg.license_id ? ' · лицензия ' + cfg.license_id : '')) : '';
@@ -642,13 +799,14 @@ function renderChips(){
   var chipAll = document.createElement('div');
   chipAll.className = 'chip' + (filterTag ? '' : ' active');
   chipAll.textContent = 'Все темы';
-  chipAll.onclick = function(){ filterTag = null; shown = PAGE_SIZE; render(); };
+  chipAll.onclick = function(){ hapticSelect(); filterTag = null; shown = PAGE_SIZE; render(); };
   box.appendChild(chipAll);
   TAGS.slice(0, 14).forEach(function(t){
     var c = document.createElement('div');
     c.className = 'chip' + (filterTag === normTag(t.tag) ? ' active' : '');
     c.textContent = t.tag + ' · ' + t.n;
     c.onclick = function(){
+      hapticSelect();
       filterTag = (filterTag === normTag(t.tag)) ? null : normTag(t.tag);
       shown = PAGE_SIZE; render();
     };
@@ -672,12 +830,14 @@ function showBack(label, onClick){
     list.parentNode.insertBefore(b, list);
   }
   b.textContent = label;
-  b.onclick = onClick;
+  b.onclick = function(){ haptic('light'); onClick(); };
   b.style.display = 'block';
+  updateTgBack();
 }
 function hideBack(){
   var b = document.getElementById('backBtn');
   if (b) b.style.display = 'none';
+  updateTgBack();
 }
 var TAG_ICONS = {
   russia:'🇷🇺', россия:'🇷🇺', worldnews:'🌍', мировыеновости:'🌍',
@@ -690,22 +850,6 @@ var TAG_ICONS = {
 };
 function tagIcon(tag){
   return TAG_ICONS[normTag(tag)] || '🏷️';
-}
-function topicCardCount(){
-  if (TOPICS){
-    var n = 0, covered = 0;
-    TOPICS.forEach(function(t){
-      var c = 0;
-      POSTS.forEach(function(p){ if (topicOf(p) === t.id) c++; });
-      if (c) n++;
-      covered += c;
-    });
-    if (covered > 0){
-      var misc = POSTS.length - covered, total = n + (misc > 0 ? 1 : 0);
-      return { n: total, word: pluralWord(total, ['тема','темы','тем']) };
-    }
-  }
-  return { n: TAGS.length, word: pluralWord(TAGS.length, ['тег','тега','тегов']) };
 }
 /* ── экран «По темам» (v54-ru): карточки тем из topics.json (если реально
    покрывают посты) + каждый тег постов своей карточкой. Тап по карточке —
@@ -757,6 +901,7 @@ function renderTopicsScreen(){
   list.style.display = '';
   list.querySelectorAll('.tcard[data-topic]').forEach(function(el){
     el.addEventListener('click', function(){
+      haptic('medium');
       filterTopic = el.getAttribute('data-topic');
       shown = PAGE_SIZE; render();
       window.scrollTo(0, 0);
@@ -764,6 +909,7 @@ function renderTopicsScreen(){
   });
   list.querySelectorAll('.tcard[data-ttag]').forEach(function(el){
     el.addEventListener('click', function(){
+      haptic('medium');
       filterTag = el.getAttribute('data-ttag');
       shown = PAGE_SIZE; render();
       window.scrollTo(0, 0);
@@ -799,6 +945,7 @@ function renderModeGrid(){
   list.style.display = '';
   list.querySelectorAll('.tcard').forEach(function(el){
     el.addEventListener('click', function(){
+      haptic('medium');
       filterMode = el.getAttribute('data-mode');   // 'months' | 'alpha' | 'kind' | 'topics'
       tocGroup = null; shown = PAGE_SIZE; render();
       window.scrollTo(0, 0);
@@ -826,6 +973,7 @@ function renderGroupCards(){
   list.style.display = '';
   list.querySelectorAll('.tcard').forEach(function(el){
     el.addEventListener('click', function(){
+      haptic('medium');
       tocGroup = el.getAttribute('data-group');
       shown = PAGE_SIZE; render();
       window.scrollTo(0, 0);
@@ -844,26 +992,41 @@ function renderList(items){
       lastDay = p.date; groupOpen = true;
     }
     var tags = (p.tags||[]).map(function(t){ return '<span class="c-tag">' + esc(t) + '</span>'; }).join('');
-    html += '<div class="card" data-url="' + esc(p.url||'') + '">' +
+    html += '<a class="card"' + (p.url ? ' href="' + esc(p.url) + '" target="_blank" rel="noopener"' : '') + '>' +
               '<div class="c-top">' +
                 (p.time ? '<span class="c-time">' + esc(p.time) + '</span>' : '') +
                 '<span class="c-title">' + esc(p.title || 'Пост') + '</span>' +
               '</div>' +
               (p.preview ? '<div class="c-prev">' + esc(p.preview) + '</div>' : '') +
               (tags ? '<div class="c-tags">' + tags + '</div>' : '') +
-            '</div>';
+            '</a>';
   });
   if (groupOpen) html += '</div>';
   list.innerHTML = html;
-  list.querySelectorAll('.card').forEach(function(el){
-    el.addEventListener('click', function(){ openUrl(el.getAttribute('data-url')); });
+  list.querySelectorAll('a.card[href]').forEach(function(el){
+    el.addEventListener('click', function(ev){
+      if (ev.metaKey || ev.ctrlKey) return;   // ctrl/⌘+клик — новую вкладку открывает браузер
+      haptic('light');
+      // мини-апп → openUrl: переход внутрь Telegram, при тихом сбое iOS
+      // (мини-апп открыт из того же канала) — видимый запасной путь через
+      // браузер; десктоп-браузер без моста → НЕ перехватываем: работает
+      // настоящая ссылка
+      if (tg || iOS) {
+        ev.preventDefault();
+        /* мгновенная визуальная отдача, пока Telegram выполняет переход
+           (до 1.5 с) — тап не ощущается «мёртвым» (опыт живого приложения) */
+        el.classList.add('pressed');
+        setTimeout(function(){ el.classList.remove('pressed'); }, 300);
+        openUrl(el.getAttribute('href'));
+      }
+    });
   });
   var more = document.getElementById('moreBtn');
   if (items.length > shown){
     if (!more){
       more = document.createElement('button');
       more.id = 'moreBtn'; more.className = 'more';
-      more.onclick = function(){ shown += PAGE_SIZE; render(); };
+      more.onclick = function(){ haptic('light'); shown += PAGE_SIZE; render(); };
       document.getElementById('list').after(more);
     }
     more.textContent = 'Показать ещё (' + (items.length - shown) + ')';
@@ -880,13 +1043,19 @@ function renderState(kind, extra){
   st.style.display = 'block';
   if (kind === 'empty')   st.innerHTML = '<div class="big">📭</div><div class="t">Пока пусто</div><div>Посты появятся здесь сразу после первой публикации или импорта.</div>';
   if (kind === 'nomatch') st.innerHTML = '<div class="big">🔍</div><div class="t">Ничего не найдено</div><div>Попробуйте изменить запрос или выбрать другую тему.</div>';
-  if (kind === 'error')   st.innerHTML = '<div class="big">⚠️</div><div class="t">Не удалось загрузить оглавление</div><div>' + esc(extra||'') + '</div>';
+  if (kind === 'error'){
+    document.getElementById('chips').style.display = 'none';
+    st.innerHTML = '<div class="big">⚠️</div><div class="t">Не удалось загрузить оглавление</div><div>' + esc(extra||'') + '</div>'
+      + '<button type="button" class="more" id="retryBtn" style="max-width:220px;margin:18px auto 0">Повторить</button>';
+    var rb = document.getElementById('retryBtn');
+    if (rb) rb.onclick = function(){ haptic('light'); load(); loadTopics(); };
+  }
 }
 function render(){
   var items = filtered();
   var q = filterQ.trim();
   var inToc = view === 'toc' && !q;
-  var sub = POSTS.length ? ('каталог постов · ' + POSTS.length + ' шт.') : 'каталог постов канала';
+  var sub = POSTS.length ? ('каталог постов · ' + POSTS.length + ' ' + plural(POSTS.length)) : 'каталог постов канала';
   if (inToc && filterMode && filterMode !== 'topics' && !tocGroup){
     var gn = groupCards().length;
     sub = gn + ' ' + pluralWord(gn, ['раздел','раздела','разделов']);
@@ -904,9 +1073,7 @@ function render(){
   if (inToc && filterTopic){
     showBack('← По темам', function(){ filterTopic = null; shown = PAGE_SIZE; render(); });
   } else if (inToc && filterMode && tocGroup){
-    var bm = MODES.filter(function(m){ return m.id === filterMode; })[0];
-    showBack('← ' + (bm ? bm.title : 'Разделы'),
-             function(){ tocGroup = null; shown = PAGE_SIZE; render(); });
+    showBack('← Разделы', function(){ tocGroup = null; shown = PAGE_SIZE; render(); });
   } else if (inToc && filterTag){
     showBack('← По темам', function(){ filterTag = null; shown = PAGE_SIZE; render(); });
   } else { hideBack(); }
@@ -925,14 +1092,17 @@ qEl.addEventListener('input', function(){
   render();
 });
 clrEl.addEventListener('click', function(){
+  haptic('light');
   qEl.value = ''; filterQ = ''; clrEl.style.display = 'none'; shown = PAGE_SIZE; render(); qEl.focus();
 });
 
 /* ── переключатель вида: Оглавление / Лента ── */
 document.getElementById('vToc').addEventListener('click', function(){
-  view = 'toc'; filterTopic = null; filterMode = null; tocGroup = null; shown = PAGE_SIZE; render();
+  hapticSelect();
+  view = 'toc'; filterTopic = null; filterTag = null; filterMode = null; tocGroup = null; shown = PAGE_SIZE; render();
 });
 document.getElementById('vFeed').addEventListener('click', function(){
+  hapticSelect();
   view = 'feed'; filterTopic = null; filterTag = null; filterMode = null; tocGroup = null; shown = PAGE_SIZE; render();
 });
 
@@ -943,17 +1113,14 @@ function tryApplyTopics(){
   if (!RAW_TOPICS || !POSTS_READY) return;
   var ts = (RAW_TOPICS && RAW_TOPICS.topics) || [];
   TOPICS = ts.filter(function(t){ return t && t.id && (t.tags||[]).length; });
-  TOC_ON = false;
-  if (!TOPICS.length){ TOPICS = null; render(); return; }
-  var covered = POSTS.filter(function(p){ return topicOf(p); }).length;
-  TOC_ON = covered > 0;
-  render();   // темы не покрывают посты — корень оглавления покажет универсальные разделы
+  if (!TOPICS.length) TOPICS = null;
+  render();   // v56-ru: темы живут внутри карточки «По темам» — корень всегда одинаковый
 }
 function loadTopics(){
   fetch('topics.json?v=' + Date.now(), {cache:'no-store'})
     .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(data){ RAW_TOPICS = data; tryApplyTopics(); })
-    .catch(function(){ render(); });   // topics.json нет — остаётся вид «Лента»
+    .catch(function(){ if (POSTS_READY) render(); });   // topics.json нет/недоступен — остаётся текущий вид
 }
 function boot(data){
   var posts = Array.isArray(data) ? data : (data.posts || []);
@@ -968,11 +1135,11 @@ function boot(data){
     var ka = a.date + ' ' + a.time, kb = b.date + ' ' + b.time;
     return ka < kb ? 1 : (ka > kb ? -1 : 0);
   });
-  if (cfg.default_view !== 'feed') view = 'toc';   // по умолчанию — оглавление
+  if (!POSTS_READY && cfg.default_view !== 'feed') view = 'toc';   // вид по умолчанию — только при первой загрузке
   var counts = {};
   POSTS.forEach(function(p){ (p.tags||[]).forEach(function(t){
     var k = normTag(t); if (!k) return;
-    if (!counts[k]) counts[k] = {tag: t.replace(/^#/,'') ? t : t, n: 0};
+    if (!counts[k]) counts[k] = {tag: t, n: 0};
     counts[k].n++;
   });});
   TAGS = Object.keys(counts).map(function(k){ return counts[k]; })
@@ -982,18 +1149,71 @@ function boot(data){
   tryApplyTopics();
 }
 
+/* ── загрузка данных: мгновенный старт из кэша + тихое обновление ──
+   posts.json после каждой успешной загрузки сохраняется в localStorage:
+   на медленной сети оглавление открывается мгновенно (сохранённая копия),
+   затем тихо обновляется; без сети показывается копия. */
+var CACHE_KEY = 'sz_posts_v1';
+function cacheRead(){
+  try {
+    var o = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    return (o && typeof o.raw === 'string') ? o : null;
+  } catch(e){ return null; }
+}
+function stampFresh(t){
+  if (!t) return;
+  var el = document.getElementById('fresh');
+  if (!el){
+    el = document.createElement('div');
+    el.className = 'lic'; el.id = 'fresh';
+    var f = document.querySelector('footer');
+    if (f) f.insertBefore(el, document.getElementById('licLine'));
+  }
+  var d = new Date(t), z = function(x){ return ('0' + x).slice(-2); };
+  el.textContent = 'данные обновлены: ' + z(d.getDate()) + '.' + z(d.getMonth() + 1) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
+}
+function bootFromCache(){
+  var cached = cacheRead();
+  if (!cached) return null;
+  try {
+    var cd = JSON.parse(cached.raw);
+    var cn = Array.isArray(cd) ? cd.length : ((cd && cd.posts) ? cd.posts.length : 0);
+    if (cn) { boot(cd); stampFresh(cached.t); }   // пустой кэш не показываем — пусть решает сеть
+    return cached;
+  } catch(e){ return null; }
+}
 function load(){
-  var url = 'posts.json?v=' + Date.now();
-  fetch(url, {cache:'no-store'})
-    .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(boot)
-    .catch(function(e){ renderState('error', 'Файл posts.json недоступен или пуст. Проверьте настройку по гайду (' + e.message + ').'); });
+  var cached = bootFromCache();
+  fetch('posts.json?v=' + Date.now(), {cache:'no-store'})
+    .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+    .then(function(txt){
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({t: Date.now(), raw: txt})); } catch(e){}
+      if (cached && txt === cached.raw){ stampFresh(Date.now()); return; }   // данные не изменились
+      boot(JSON.parse(txt));
+      stampFresh(Date.now());
+    })
+    .catch(function(e){
+      if (!POSTS_READY) renderState('error', 'Файл posts.json недоступен или пуст. Проверьте настройку по гайду (' + e.message + ').');
+    });
 }
 
 /* ── старт ── */
 applyConfig();
+wireTgBack();
 diagInit();
 maybeBridgeBanner();
+
+/* кнопка «Поделиться»: копирует ссылку на этот мини-апп */
+document.getElementById('hShare').addEventListener('click', function(){
+  haptic('light');
+  var http = location.protocol === 'http:' || location.protocol === 'https:';
+  var url = http ? (location.origin + location.pathname) : (cfg.channel_url || location.href);
+  copyText(url, function(ok){
+    if (ok){ hapticNotify('success'); toast('Ссылка на оглавление скопирована'); }
+    else { hapticNotify('error'); toast('Не удалось скопировать ссылку'); }
+  });
+});
+
 licenseValid(cfg.licensee, cfg.license_key).then(function(ok){
   if (!ok){
     var b = document.getElementById('banner');
