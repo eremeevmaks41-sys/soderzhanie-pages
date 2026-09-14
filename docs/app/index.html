@@ -2,11 +2,14 @@
 <html lang="ru">
 <head>
 <script>
-/* SZ-APP-SHELL v1 (Task 116) — один мини-апп на всех клиентов подписочной ветки.
+/* SZ-APP-SHELL v1 (Task 116/117) — один мини-апп на всех клиентов подписочной ветки.
    Telegram запускает мини-апп с параметром startapp=<канал>; до загрузки
    config.js/posts.json подставляем <base> на папку тенанта — дальше шаблон
    работает как обычно, у каждого клиента своя страница. Слаг канала жёстко
-   фильтруется: a-z0-9_, 3–64 символа. Пересборка: scripts/build_app_shell.py */
+   фильтруется: a-z0-9_, 3–64 символа. Без параметра (t.me «Open app»,
+   меню-кнопка) показываем демо-канал (Task 117).
+   Пересборка: scripts/build_app_shell.py */
+window.__TOC_DEFAULT = 'testovuj';
 (function () {
   function sp() {
     try {
@@ -22,6 +25,7 @@
     return '';
   }
   var ch = String(sp() || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+  if (!ch) ch = String(window.__TOC_DEFAULT || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
   window.__TOC_CHANNEL = ch;
   if (ch.length >= 3 && ch.length <= 64) {
     var b = document.createElement('base');
