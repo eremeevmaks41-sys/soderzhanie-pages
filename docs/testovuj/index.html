@@ -84,6 +84,11 @@ header{display:flex;align-items:center;gap:12px;padding:10px 2px 14px}
 .c-prev{font-size:13.8px;color:var(--muted);margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .c-tags{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px}
 .c-tag{font-size:11.5px;color:var(--accent);background:var(--accent-soft);border-radius:7px;padding:2.5px 8px;font-weight:600}
+/* ── длинные ссылки не ломают сетку (Task 124, репорт босса 15.9.2026:
+   посты-«голые ссылки» раздували Ленту шире экрана на телефоне) ── */
+html,body{overflow-x:hidden}
+header>div{min-width:0}
+.c-title,.c-prev,.c-tag,.t-title,.h-name{min-width:0;overflow-wrap:anywhere;word-break:break-word}
 
 /* ── переключатель вида: Оглавление / Лента ── */
 .views{display:flex;background:var(--chip);border:1.5px solid var(--line);border-radius:12px;padding:3px;margin-bottom:11px}
