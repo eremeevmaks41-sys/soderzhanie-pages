@@ -214,8 +214,14 @@ footer .lic{font-size:11px;opacity:.75}
 
 <script src="config.js"></script>
 <script>
-/* SZ-APP-SHELL guard: config.js не доехал (папки канала нет) — честный экран */
-if (typeof SODERZHANIE_CONFIG === 'undefined') {
+/* SZ-APP-SHELL guard (Task 119): config.js не доехал (папки канала нет) —
+   честный экран. Проверяем РОВНО тот глобал, который пишет генератор config.js
+   (trialbuild.py → window.SZ_CONFIG; раньше проверялся выдуманный
+   SODERZHANIE_CONFIG — гарант срабатывал на КАЖДОМ открытии мини-аппа).
+   Экран — position:fixed overlay БЕЗ document.write: document.write посреди
+   парсинга сливает <body style> тёмного экрана с живой страницей (кейс 14.9:
+   весь мини-апп становился чёрным, вёрстка ломалась). */
+if (!window.SZ_CONFIG) {
   (function () {
     try {
       var w = window.Telegram && window.Telegram.WebApp;
@@ -226,19 +232,23 @@ if (typeof SODERZHANIE_CONFIG === 'undefined') {
       }
     } catch (e) {}
   })();
-  document.open();
-  document.write('<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">'
-    + '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'
-    + '<title>Оглавление</title></head>'
-    + '<body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#0f1420;'
-    + 'color:#e8ecf5;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0">'
-    + '<div style="text-align:center;padding:24px;max-width:420px">'
-    + '<div style="font-size:44px;margin-bottom:12px">\ud83d\udcd6</div>'
-    + '<div style="font-size:18px;font-weight:600;margin-bottom:8px">Оглавление не найдено</div>'
-    + '<div style="font-size:14px;opacity:.7;line-height:1.5">'
-    + 'Открой оглавление через кнопку в закрепе канала или кнопку меню бота — вход настроен там.'
-    + '</div></div></body></html>');
-  document.close();
+  (function () {
+    try {
+      var wrapEl = document.querySelector('.wrap');
+      if (wrapEl && wrapEl.parentNode) wrapEl.parentNode.removeChild(wrapEl);
+      var d = document.createElement('div');
+      d.setAttribute('style', 'position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;'
+        + 'font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:#0f1420;'
+        + 'color:#e8ecf5;display:flex;align-items:center;justify-content:center;margin:0');
+      d.innerHTML = '<div style="text-align:center;padding:24px;max-width:420px">'
+        + '<div style="font-size:44px;margin-bottom:12px">📖</div>'
+        + '<div style="font-size:18px;font-weight:600;margin-bottom:8px">Оглавление не найдено</div>'
+        + '<div style="font-size:14px;opacity:.7;line-height:1.5">'
+        + 'Открой оглавление через кнопку в закрепе канала или кнопку меню бота — вход настроен там.'
+        + '</div></div>';
+      document.body.appendChild(d);
+    } catch (e) {}
+  })();
 }
 </script>
 
