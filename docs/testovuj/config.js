@@ -1,5 +1,5 @@
 window.SZ_CONFIG = {
-  channel_name: "тестовый 1",
+  channel_name: "Дневник",
   channel_url: "https://t.me/testovuj",
   channel_button: "Канал",
   header_emoji: "📖",
