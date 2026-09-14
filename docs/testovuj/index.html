@@ -288,25 +288,15 @@ function diagNote(msg){
   diagEl.textContent = 'диагностика: ' + diagLog.join(' | ');
 }
 
-/* ── баннер-спасатель: страница открыта БЕЗ моста Telegram (прямая
-   ссылка — из чата, истории браузера и т.п.). Мост изнутри страницы
-   создать нельзя (клиент делает это только при запуске как мини-апп).
-   Зато можно указать правильный вход: закреп канала, кнопка меню бота
-   или кнопка баннера (t.me/<бот>?startapp из config.js) ── */
+/* ── без моста Telegram (открытие не как мини-апп): изнутри страницы мост
+   создать нельзя. Пугающую ошибку убрали (Task 114): веб-режим полноценно
+   открывает посты той же вкладкой, факт режима виден в футере-диагностике ── */
 function showBridgeBanner(){
   if (tg || !document.querySelector) return;
   if (document.getElementById('tgBanner')) return;   /* уже показан — не дублируем */
-  var rescue = cfg.bot_username
-    ? 'https://t.me/' + String(cfg.bot_username).replace(/^@/, '') + '?startapp'
-    : (cfg.channel_url || '');
-  if (!rescue) return;
-  var b = document.createElement('div');
-  b.className = 'banner'; b.id = 'tgBanner'; b.style.display = 'block';
-  b.innerHTML = '<b>Мост Telegram недоступен:</b> приложение открыто как обычная веб-страница, '
-    + 'поэтому посты так открывать не получится. Откройте оглавление через кнопку в закрепе '
-    + 'канала или кнопку меню бота — или <a href="' + esc(rescue) + '">нажмите сюда для правильного входа</a>.';
-  var anchor = document.querySelector('.search');
-  if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(b, anchor);
+  /* Task 114: пугающего баннера больше нет — веб-режим полноценно открывает
+     посты той же вкладкой (routeOpen); режим виден в диагностике футера */
+  diagNote('веб-режим: посты открываются той же вкладкой');
 }
 /* async-мост мог ещё не доехать — раньше времени пугать пользователя нельзя:
    баннер показываем только когда статус моста окончательный */
@@ -381,11 +371,12 @@ function openUrl(url){
 function routeOpen(url){
   if (!url) return;
   if (!tg){
-    /* вне мини-аппа: во встроенном браузере Telegram window.open
-       блокируется молча — спасает навигация в той же вкладке;
-       обычный браузер честно открывает новую вкладку */
-    if (iOS) { diagNote('нет tg → переход location.href'); window.location.href = url; return; }
-    window.open(url, '_blank');
+    /* вне мини-аппа (в т.ч. встроенный браузер Telegram из кнопки канала):
+       window.open блокируется молча — единственный надёжный путь везде —
+       навигация в той же вкладке: в Telegram откроет пост прямо в приложении,
+       в обычном браузере — страницу t.me с кнопкой «открыть в приложении» */
+    diagNote('нет моста → навигация той же вкладкой');
+    window.location.href = url;
     return;
   }
   var plat = tg.platform || '';
