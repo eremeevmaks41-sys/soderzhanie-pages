@@ -339,13 +339,17 @@ function themeApply(){
 }
 if (!tg) themeApply();   /* без моста тема по системной настройке; с мостом применил adoptBridge */
 
-/* ── самодиагностика в футере: записывает среду запуска и то, какая
-   ветка открытия реально сработала — по ней пользователь может точно
-   описать, что происходит на его устройстве ── */
+/* ── самодиагностика (Task 120: в футере только строки продукта —
+   линия скрыта, видна при ?diag=1, каждая заметка идёт в консоль):
+   записывает среду запуска и то, какая ветка открытия сработала ── */
 var diagEl = null, diagLog = [];
 function diagInit(){
   diagEl = document.createElement('div');
   diagEl.className = 'lic'; diagEl.id = 'diag';
+  /* Task 120 (директива босса 14.9): в футере только строки продукта —
+     линия самодиагностики скрыта; видна при ?diag=1, заметки всегда
+     дублируются в консоль (console.log) */
+  diagEl.style.display = /[?&]diag=/.test(location.search) ? '' : 'none';
   var f = document.querySelector('footer');
   if (f) f.appendChild(diagEl);
   diagNote('старт: tg=' + (tg
@@ -354,6 +358,7 @@ function diagInit(){
        : (bridgePending ? 'мост ещё грузится (async)…' : 'НЕТ — обычная страница, моста нет'))));
 }
 function diagNote(msg){
+  try { console.log('[oglavlenie] ' + msg); } catch(e){}
   if (!diagEl) return;
   var d = new Date(), z = function(x){ return ('0'+x).slice(-2); };
   diagLog.push(z(d.getHours())+':'+z(d.getMinutes())+':'+z(d.getSeconds())+' '+msg);
