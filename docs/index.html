@@ -1248,11 +1248,14 @@ loadTopics();
 })();
 </script>
 <script>
-/* SZ-CAB main (Task 129) — личный кабинет клиента: экран поверх витрины.
+/* SZ-CAB main (Task 129/130) — личный кабинет клиента: экран поверх витрины.
    Данные: POST https://sales-bot-private.onrender.com/api/cabinet с initData — подпись проверяет сервер
    (main.verify_init_data, официальная схема Telegram). Кабинет только читает:
    автосписаний нет, все кнопки оплаты ведут в бота (t.me), страница
-   оглавления открывается нативно. Язык: ?cablang= → язык Telegram-аккаунта. */
+   оглавления открывается нативно. Язык: ?cablang= → язык Telegram-аккаунта.
+   Task 130 (вторая очередь): лицензии продуктовой ветки, глубокая история
+   оплат (итог ⭐ и счётчик, до 30 записей), «рассказать друзьям» и
+   «скопировать сводку» (буфер обмена с фолбэком + тост). */
 (function () {
   if (!window.__TOC_CABINET) return;
   var API = 'https://sales-bot-private.onrender.com';
@@ -1291,7 +1294,19 @@ loadTopics();
       err_t: 'Кабинет не загрузился',
       err_m: 'Проверьте связь и попробуйте ещё раз. Статус подписки всегда доступен и в боте.',
       retry: 'Повторить',
-      hello: 'Здравствуйте, {n}!'
+      hello: 'Здравствуйте, {n}!',
+      lic: 'Комплекты и лицензии',
+      lic_fresh: 'актуальная',
+      lic_upd: 'есть обновление v{v} — пришлите /update в боте',
+      hist_meta: 'всего {n}⭐ · платежей: {k}',
+      hist_more: 'показаны последние {n} из {m}',
+      share: '📤 Рассказать друзьям',
+      share_txt: 'Оглавление для Telegram-канала — 7 дней бесплатно:',
+      copy: '📋 Скопировать сводку',
+      copied: 'Сводка скопирована',
+      copy_fail: 'Не получилось скопировать',
+      exp_t: 'Личный кабинет',
+      exp_none: 'Подключений пока нет'
     },
     en: {
       no_sub_t: 'No connections yet',
@@ -1321,7 +1336,19 @@ loadTopics();
       err_t: 'The account screen did not load',
       err_m: 'Check your connection and try again. The subscription status is always available in the bot too.',
       retry: 'Retry',
-      hello: 'Hello, {n}!'
+      hello: 'Hello, {n}!',
+      lic: 'Kits and licenses',
+      lic_fresh: 'up to date',
+      lic_upd: 'update to v{v} is ready — send /update in the bot',
+      hist_meta: 'total {n}⭐ · {k} payments',
+      hist_more: 'showing the last {n} of {m}',
+      share: '📤 Tell your friends',
+      share_txt: 'A table of contents for your Telegram channel — 7 days free:',
+      copy: '📋 Copy summary',
+      copied: 'Summary copied',
+      copy_fail: 'Could not copy',
+      exp_t: 'My account',
+      exp_none: 'No connections yet'
     }
   })[L];
   function esc(s) {
@@ -1378,6 +1405,84 @@ loadTopics();
   function bar(tone) {
     return '<div style="width:44px;height:5px;border-radius:3px;background:' + tone
       + ';margin:2px 0 14px"></div>';
+  }
+  /* Task 130: тост — короткое подтверждение внизу экрана (копирование). */
+  function toast(msg) {
+    try {
+      var el = document.createElement('div');
+      el.setAttribute('style', 'position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);'
+        + 'transform:translateX(-50%);background:' + FG + ';color:' + BG + ';'
+        + 'padding:10px 18px;border-radius:12px;font-size:14px;z-index:100000;'
+        + 'opacity:0;transition:opacity .25s;max-width:86%;text-align:center');
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(function () { el.style.opacity = '1'; }, 30);
+      setTimeout(function () { el.style.opacity = '0'; }, 1900);
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 2400);
+    } catch (e) {}
+  }
+  /* Task 130: буфер обмена — штатный API с фолбэком на скрытую textarea
+     (старые webview не дают clipboard без разрешения). */
+  function copyText(s, cb) {
+    function fallback(t) {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = t;
+        ta.setAttribute('style', 'position:fixed;left:-9999px;top:0');
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, t.length);
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e) { return false; }
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(s).then(function () { cb(true); },
+          function () { cb(fallback(s)); });
+        return;
+      }
+    } catch (e) {}
+    cb(fallback(s));
+  }
+  function stTitle(st, sub) {
+    if (!sub.has) return TXT.no_sub_t;
+    if (st === 'pending_admin' || st === 'pending_build') return TXT.prep_t;
+    if (st === 'trial') return TXT.trial_t;
+    if (st === 'paid' && sub.paid_active) return TXT.paid_t;
+    if (st === 'suspended') return TXT.susp_t;
+    if (st === 'ended') return TXT.ended_t;
+    if (st === 'deleted') return TXT.del_t;
+    return TXT.prep_t;
+  }
+  /* Task 130: текстовая сводка кабинета — то, что уходит в буфер по кнопке. */
+  function summaryText(d) {
+    var sub = d.sub || {};
+    var lines = [TXT.exp_t];
+    if (!sub.has) {
+      lines.push(TXT.exp_none);
+    } else {
+      lines.push(stTitle(sub.status || '', sub)
+        + (sub.channel ? ' · @' + sub.channel : ''));
+      if (sub.status === 'trial' || sub.status === 'paid') {
+        lines.push(daysLine(sub.days_left || 0, sub.ends_str));
+        if (sub.months) lines.push(TXT.months.replace('{n}', String(sub.months)));
+      }
+      if (sub.log_total) lines.push(TXT.hist_meta
+        .replace('{n}', String(sub.paid_total || 0))
+        .replace('{k}', String(sub.log_total)));
+    }
+    var items = (d.lic && d.lic.items) || [];
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      lines.push('• ' + it.tier + ' · № ' + it.lic_id + ' · ' + it.branch
+        + ' · v' + it.ver + ' — '
+        + (it.fresh ? TXT.lic_fresh
+          : TXT.lic_upd.replace('{v}', String((d.lic && d.lic.cur) || ''))));
+    }
+    if (d.bot_link) lines.push(d.bot_link);
+    return lines.join('\n');
   }
   function render(d) {
     var sub = d.sub || {};
@@ -1438,8 +1543,13 @@ loadTopics();
       if (rows[i][0]) b.push(btn(rows[i][0], rows[i][1], false));
     }
     if (sub.has) {
-      b.push('<div style="font-size:15px;font-weight:600;margin:22px 0 4px">'
+      b.push('<div style="font-size:15px;font-weight:600;margin:22px 0 2px">'
         + esc(TXT.hist) + '</div>');
+      if (sub.log_total) {
+        b.push('<div style="font-size:13px;opacity:.65;margin:0 0 4px">'
+          + esc(TXT.hist_meta.replace('{n}', String(sub.paid_total || 0))
+            .replace('{k}', String(sub.log_total))) + '</div>');
+      }
       if (sub.log && sub.log.length) {
         for (var j = sub.log.length - 1; j >= 0; j--) {
           b.push('<div style="display:flex;justify-content:space-between;gap:12px;'
@@ -1447,10 +1557,42 @@ loadTopics();
             + '<span style="opacity:.7;white-space:nowrap">' + esc(sub.log[j].d) + '</span>'
             + '<span style="text-align:right">' + esc(sub.log[j].label) + '</span></div>');
         }
+        if (sub.log_total > sub.log.length) {
+          b.push('<div style="font-size:13px;opacity:.6;margin-top:6px">'
+            + esc(TXT.hist_more.replace('{n}', String(sub.log.length))
+              .replace('{m}', String(sub.log_total))) + '</div>');
+        }
       } else {
         b.push('<div style="font-size:14px;opacity:.6">' + esc(TXT.hist_empty) + '</div>');
       }
     }
+    /* Task 130: лицензии продуктовой ветки — те же данные, что «Проверить
+       свою лицензию» в боте; без лицензий блок не показывается вовсе. */
+    var licItems = (d.lic && d.lic.items) || [];
+    if (licItems.length) {
+      b.push('<div style="font-size:15px;font-weight:600;margin:22px 0 4px">'
+        + esc(TXT.lic) + '</div>');
+      for (var k = 0; k < licItems.length; k++) {
+        var it = licItems[k];
+        b.push('<div style="padding:9px 0;border-bottom:1px solid ' + LINE + ';font-size:14px">'
+          + '<div>' + esc(it.tier) + '</div>'
+          + '<div style="opacity:.75;margin-top:2px">№ ' + esc(it.lic_id)
+          + ' · ' + esc(it.branch) + ' · v' + esc(it.ver) + '</div>'
+          + '<div style="margin-top:2px;font-size:13px;color:'
+          + (it.fresh ? '#3e7d3e' : ACC) + '">'
+          + esc(it.fresh ? TXT.lic_fresh
+            : TXT.lic_upd.replace('{v}', String((d.lic && d.lic.cur) || '')))
+          + '</div></div>');
+      }
+    }
+    /* Task 130: поделиться ботом и скопировать текстовую сводку. */
+    if (d.bot_link) {
+      b.push(btn('https://t.me/share/url?url=' + encodeURIComponent(d.bot_link)
+        + '&text=' + encodeURIComponent(TXT.share_txt), TXT.share, false));
+    }
+    b.push('<a href="#" id="szc-copy" style="display:block;text-decoration:none;'
+      + 'text-align:center;margin:10px 0;padding:13px 14px;border-radius:12px;'
+      + 'background:' + CARD + ';color:inherit">' + esc(TXT.copy) + '</a>');
     b.push('<div style="font-size:13px;opacity:.55;margin-top:22px">' + esc(TXT.noauto) + '</div>');
     if (d.support) {
       b.push('<div style="font-size:14px;margin-top:8px">'
@@ -1460,6 +1602,12 @@ loadTopics();
     }
     b.push('</div>');
     ov.innerHTML = b.join('');
+    var cp = document.getElementById('szc-copy');
+    if (cp) cp.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      haptic('light');
+      copyText(summaryText(d), function (ok) { toast(ok ? TXT.copied : TXT.copy_fail); });
+    });
   }
   function renderError() {
     ov.innerHTML = '<div style="' + PAD + '">' + bar('#a34040')
