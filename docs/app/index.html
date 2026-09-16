@@ -13,9 +13,10 @@ window.__TOC_DEFAULT = 'testovuj';
 (function () {
   function sp() {
     try {
-      var q = new URLSearchParams(location.search).get('tgWebAppStartParam');
-      if (q) return q;
-      var h = location.hash.match(/tgWebAppStartParam=([^&]+)/);
+      var q = new URLSearchParams(location.search);
+      var p = q.get('tgWebAppStartParam') || q.get('startapp');
+      if (p) return p;
+      var h = location.hash.match(/(?:tgWebAppStartParam|startapp)=([^&]+)/);
       if (h) return decodeURIComponent(h[1]);
       var w = window.Telegram && window.Telegram.WebApp;
       if (w && w.initDataUnsafe && w.initDataUnsafe.start_param) {
@@ -24,7 +25,10 @@ window.__TOC_DEFAULT = 'testovuj';
     } catch (e) {}
     return '';
   }
-  var ch = String(sp() || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+  /* Task 132: сырой параметр сохраняется — из него кабинет берёт токен
+     (_cab_<uid>_<exp>_<sig>), когда мост Telegram недоступен (initData пуст). */
+  window.__TOC_STARTPARAM = String(sp() || '');
+  var ch = window.__TOC_STARTPARAM.toLowerCase().replace(/[^a-z0-9_]/g, '');
   if (!ch) ch = String(window.__TOC_DEFAULT || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
   window.__TOC_CHANNEL = ch;
   if (ch.length >= 3 && ch.length <= 64) {
@@ -38,10 +42,14 @@ window.__TOC_DEFAULT = 'testovuj';
 <script>
 /* SZ-CAB prelude (Task 129): startapp=_cab — режим личного кабинета.
    Каналы Telegram не начинаются с «_», поэтому конфликт с папками тенантов
-   невозможен. <base> в кабинете НЕ ставится: витринные config.js/posts.json
-   не грузятся (гарант ниже в этом режиме молчит), а витринный DOM прячем
-   стилем заранее — до запуска ядра и кабинета. */
-if (window.__TOC_CHANNEL === '_cab') {
+   невозможен. Task 132: кабинет распознаётся и по префиксу _cab_ — так в
+   startapp приезжает подписанный токен пользователя для контекстов без
+   initData (браузерный фолбэк Direct-Link). <base> в кабинете НЕ ставится:
+   витринные config.js/posts.json не грузятся (гарант ниже в этом режиме
+   молчит), а витринный DOM прячем стилем заранее — до запуска ядра и
+   кабинета. */
+var __cabCh = String(window.__TOC_CHANNEL || '');
+if (__cabCh === '_cab' || __cabCh.indexOf('_cab_') === 0) {
   window.__TOC_CABINET = true;
   (function () {
     try {
@@ -1261,10 +1269,21 @@ loadTopics();
   var API = 'https://sales-bot-private.onrender.com';
   var w = window.Telegram && window.Telegram.WebApp;
   var tgUser = (w && w.initDataUnsafe && w.initDataUnsafe.user) || {};
+  /* Task 132: токен кабинета из startapp (_cab_<uid>_<exp>_<sig>) — путь для
+     контекстов без моста Telegram (initData пуст): браузерный фолбэк
+     Direct-Link, старые клиенты. Если есть и initData, и токен — initData
+     основной (там настоящее имя). */
+  var cabTok = '';
+  if (String(window.__TOC_STARTPARAM || '').indexOf('_cab_') === 0) {
+    cabTok = String(window.__TOC_STARTPARAM).slice(5);
+  }
   var qLang = '';
   try { qLang = new URLSearchParams(location.search).get('cablang') || ''; } catch (e) {}
+  var navLang = '';
+  try { navLang = String(navigator.language || navigator.userLanguage || ''); } catch (e) {}
   var L = (qLang === 'ru' || qLang === 'en') ? qLang
-    : (String(tgUser.language_code || '').toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en');
+    : (String(tgUser.language_code || '').toLowerCase().indexOf('ru') === 0 ? 'ru'
+    : (navLang.toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en'));
   var TXT = ({
     ru: {
       no_sub_t: 'Пока нет подключений',
@@ -1293,6 +1312,10 @@ loadTopics();
       noauto: 'Автосписаний нет — месяц продлевается только вашим платежом.',
       err_t: 'Кабинет не загрузился',
       err_m: 'Проверьте связь и попробуйте ещё раз. Статус подписки всегда доступен и в боте.',
+      ctx_t: 'Кабинет открывается из бота',
+      ctx_m: 'Эта ссылка открыта вне Telegram. Откройте бота и нажмите кнопку «Личный кабинет» (или пришлите /cabinet) — кабинет откроется сам.',
+      stale_t: 'Сессия кабинета устарела',
+      stale_m: 'Нажмите «Повторить». Если не помогло — откройте бота и снова нажмите кнопку «Личный кабинет».',
       retry: 'Повторить',
       hello: 'Здравствуйте, {n}!',
       lic: 'Комплекты и лицензии',
@@ -1335,6 +1358,10 @@ loadTopics();
       noauto: 'No auto-charges — a month is renewed only by your payment.',
       err_t: 'The account screen did not load',
       err_m: 'Check your connection and try again. The subscription status is always available in the bot too.',
+      ctx_t: 'Open the account from the bot',
+      ctx_m: 'This link was opened outside Telegram. Open the bot and tap “My account” (or send /cabinet) — the account screen will open on its own.',
+      stale_t: 'Account session expired',
+      stale_m: 'Tap “Retry” first. If that does not help, open the bot and tap “My account” again.',
       retry: 'Retry',
       hello: 'Hello, {n}!',
       lic: 'Kits and licenses',
@@ -1609,13 +1636,24 @@ loadTopics();
       copyText(summaryText(d), function (ok) { toast(ok ? TXT.copied : TXT.copy_fail); });
     });
   }
-  function renderError() {
+  function renderError(diag) {
+    diag = diag || {};
+    /* Task 132: три честных экрана вместо обезличенной ошибки + код для
+       диагностики по скриншоту: HTTP-статус / why / есть ли initData и токен. */
+    var noctx = !diag.init && !diag.tok;
+    var stale = (diag.why === 'stale' || diag.why === 'token_stale');
+    var t1 = noctx ? TXT.ctx_t : (stale ? TXT.stale_t : TXT.err_t);
+    var m1 = noctx ? TXT.ctx_m : (stale ? TXT.stale_m : TXT.err_m);
     ov.innerHTML = '<div style="' + PAD + '">' + bar('#a34040')
-      + '<div style="font-size:23px;font-weight:700">' + esc(TXT.err_t) + '</div>'
-      + '<div style="font-size:15px;opacity:.85;margin:8px 0 16px">' + esc(TXT.err_m) + '</div>'
+      + '<div style="font-size:23px;font-weight:700">' + esc(t1) + '</div>'
+      + '<div style="font-size:15px;opacity:.85;margin:8px 0 16px">' + esc(m1) + '</div>'
       + '<a href="#" id="szc-retry" style="display:block;text-align:center;padding:13px 14px;'
       + 'border-radius:12px;background:' + ACC + ';color:#fffdf8;font-weight:600;'
-      + 'text-decoration:none">' + esc(TXT.retry) + '</a></div>';
+      + 'text-decoration:none">' + esc(TXT.retry) + '</a>'
+      + '<div style="font-size:11px;opacity:.4;margin-top:16px;font-family:ui-monospace,Menlo,monospace">'
+      + esc('code ' + (diag.http || 0) + ' · ' + (diag.why || 'net')
+        + ' · init=' + (diag.init ? 'yes' : 'no')
+        + ' · tok=' + (diag.tok ? 'yes' : 'no')) + '</div></div>';
     var r = document.getElementById('szc-retry');
     if (r) r.addEventListener('click', function (ev) { ev.preventDefault(); haptic('light'); load(); });
   }
@@ -1627,17 +1665,31 @@ loadTopics();
       + '-webkit-animation:szc .9s linear infinite;animation:szc .9s linear infinite"></div>'
       + '<style>@-webkit-keyframes szc{to{-webkit-transform:rotate(360deg)}}'
       + '@keyframes szc{to{transform:rotate(360deg)}}</style></div>';
+    var init = (w && w.initData) || '';
+    var diag0 = { init: init ? 1 : 0, tok: cabTok ? 1 : 0 };
+    function dthrow(http, why) {
+      throw { http: http, why: why, init: diag0.init, tok: diag0.tok };
+    }
+    var body = init ? { initData: init }
+      : (cabTok ? { cab_token: cabTok } : { initData: '' });
     fetch(API + '/api/cabinet', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: (w && w.initData) || '' })
+      body: JSON.stringify(body)
     }).then(function (r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    }).then(function (d) {
-      if (!d || !d.ok) throw new Error('payload');
-      render(d);
-    }).catch(function () { renderError(); });
+      if (!r.ok) {
+        return r.json().catch(function () { return null; }).then(function (j) {
+          dthrow(r.status, (j && j.why) || '');
+        });
+      }
+      return r.json().then(function (d) {
+        if (!d || !d.ok) dthrow(r.status, 'payload');
+        render(d);
+      });
+    }).catch(function (e) {
+      if (e && typeof e.http === 'number') { renderError(e); return; }
+      renderError({ http: 0, why: 'net', init: diag0.init, tok: diag0.tok });
+    });
   }
   ov.addEventListener('click', function (ev) {
     var t = ev.target;
