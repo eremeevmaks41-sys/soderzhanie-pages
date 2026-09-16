@@ -1,20 +1,32 @@
 {
   "version": 1,
-  "updated_at": "2026-09-16T12:15:56+03:00",
+  "updated_at": "2026-09-16T12:50:08+03:00",
   "channel": {
     "name": "тестовый 1",
     "url": "https://t.me/Testovuj"
   },
   "posts": [
     {
+      "id": 496,
+      "date": "2026-09-16",
+      "time": "12:40",
+      "title": "Личный кабинет",
+      "preview": "Пробный период · @testovuj осталось 7 дней · до 22.09.2026 https://t.me/oglavlenie_shop_bot",
+      "tags": [
+        "#личный-кабинет",
+        "#пробный-период"
+      ],
+      "kind": "text",
+      "url": "https://t.me/Testovuj/496",
+      "src": ""
+    },
+    {
       "id": 495,
       "date": "2026-09-16",
       "time": "11:52",
       "title": "согласен",
       "preview": "",
-      "tags": [
-        "#разное"
-      ],
+      "tags": [],
       "kind": "text",
       "url": "https://t.me/Testovuj/495",
       "src": ""
