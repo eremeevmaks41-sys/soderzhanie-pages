@@ -217,7 +217,7 @@ footer .lic{font-size:11px;opacity:.75}
 
   <footer>
     <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v56-ru</span></div>
-    <div class="lic" id="licLine"></div>
+    <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
 
@@ -696,6 +696,12 @@ function applyConfig(){
   var lic = cfg.licensee ? ('экземпляр для: ' + cfg.licensee + (cfg.license_id ? ' · лицензия ' + cfg.license_id : '')) : '';
   document.getElementById('licLine').textContent = lic;
 }
+   var refA = document.getElementById('refLine');
+   if (refA && cfg.ref_bot) {
+     refA.style.display = '';
+     refA.href = 'https://t.me/' + cfg.ref_bot + (cfg.ref_code ? ('?start=r' + cfg.ref_code) : '');
+     refA.textContent = '\u26a1 \u041a\u0430\u0442\u0430\u043b\u043e\u0433 \u043e\u0442 \u041e\u0433\u043b\u0430\u0432\u043b\u0435\u043d\u0438\u0435';
+   }
 
 /* ── фильтрация и рендер ── */
 function pluralWord(n, forms){
