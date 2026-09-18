@@ -279,7 +279,7 @@ footer .lic{font-size:11px;opacity:.75}
 
   <footer>
     <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v56-ru</span></div>
-    <div class="lic" id="licLine"></div>
+    <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
 
@@ -799,6 +799,12 @@ function applyConfig(){
   var lic = cfg.licensee ? ('экземпляр для: ' + cfg.licensee + (cfg.license_id ? ' · лицензия ' + cfg.license_id : '')) : '';
   document.getElementById('licLine').textContent = lic;
 }
+   var refA = document.getElementById('refLine');
+   if (refA && cfg.ref_bot) {
+     refA.style.display = '';
+     refA.href = 'https://t.me/' + cfg.ref_bot + (cfg.ref_code ? ('?start=r' + cfg.ref_code) : '');
+     refA.textContent = '\u26a1 \u041a\u0430\u0442\u0430\u043b\u043e\u0433 \u043e\u0442 \u041e\u0433\u043b\u0430\u0432\u043b\u0435\u043d\u0438\u0435';
+   }
 
 /* ── фильтрация и рендер ── */
 function pluralWord(n, forms){
@@ -1329,7 +1335,21 @@ loadTopics();
       copied: 'Сводка скопирована',
       copy_fail: 'Не получилось скопировать',
       exp_t: 'Личный кабинет',
-      exp_none: 'Подключений пока нет'
+      exp_none: 'Подключений пока нет',
+      ref_t: 'Партнёрка',
+      ref_stats: 'Приглашено: {a} · оплатили: {k} · наград: {r}',
+      ref_tier: 'Уровень {t} · до следующего уровня: {n} оплативших',
+      ref_tier_max: 'Уровень {t} — максимальный',
+      ref_coupons: 'Ваши купоны-награды',
+      ref_coupon: '{code} · −{p}% · до {d}',
+      ref_invites: 'Последние приглашения',
+      ref_st_registered: 'приглашён',
+      ref_st_trial: 'оформил триал',
+      ref_st_paid: 'оплатил',
+      ref_share: '📤 Поделиться ссылкой',
+      ref_share_txt: 'Поставил своему каналу «Оглавление» — каталог всего архива в шапке. Тебе +7 дней триала по ссылке:',
+      ref_copy: '📋 Скопировать ссылку',
+      ref_copied: 'Ссылка скопирована'
     },
     en: {
       no_sub_t: 'No connections yet',
@@ -1375,7 +1395,21 @@ loadTopics();
       copied: 'Summary copied',
       copy_fail: 'Could not copy',
       exp_t: 'My account',
-      exp_none: 'No connections yet'
+      exp_none: 'No connections yet',
+      ref_t: 'Referrals',
+      ref_stats: 'Invited: {a} · paid: {k} · rewards: {r}',
+      ref_tier: 'Level {t} · {n} paying referrals to the next level',
+      ref_tier_max: 'Level {t} — maximum',
+      ref_coupons: 'Your reward coupons',
+      ref_coupon: '{code} · −{p}% · until {d}',
+      ref_invites: 'Recent invites',
+      ref_st_registered: 'invited',
+      ref_st_trial: 'trial started',
+      ref_st_paid: 'paid',
+      ref_share: '📤 Share the link',
+      ref_share_txt: 'I set up "Table of Contents" for my channel — the whole archive in a pinned button. You get +7 trial days with this link:',
+      ref_copy: '📋 Copy the link',
+      ref_copied: 'Link copied'
     }
   })[L];
   function esc(s) {
@@ -1612,6 +1646,50 @@ loadTopics();
           + '</div></div>');
       }
     }
+    /* Task 142: блок «Партнёрка» — ссылка, статистика, тир, купоны-награды,
+       приглашения. Пустой d.ref → блок не показывается (кабинет не падает). */
+    var rf = d.ref || null;
+    if (rf && rf.link) {
+      b.push('<div style="font-size:15px;font-weight:600;margin:22px 0 4px">'
+        + esc(TXT.ref_t) + '</div>');
+      b.push('<div style="font-size:14px;opacity:.85">'
+        + esc(TXT.ref_stats.replace('{a}', String(rf.invited || 0))
+          .replace('{k}', String(rf.paid || 0))
+          .replace('{r}', String(rf.rewards || 0))) + '</div>');
+      b.push('<div style="font-size:13px;color:' + ACC + ';margin-top:2px">'
+        + esc((rf.next_left ? TXT.ref_tier : TXT.ref_tier_max)
+          .replace('{t}', String(rf.tier || 1))
+          .replace('{n}', String(rf.next_left || 0))) + '</div>');
+      var rcp = rf.coupons || [];
+      if (rcp.length) {
+        b.push('<div style="font-size:14px;font-weight:600;margin-top:10px">'
+          + esc(TXT.ref_coupons) + '</div>');
+        for (var rcq = 0; rcq < rcp.length; rcq++) {
+          b.push('<div style="padding:8px 0;border-bottom:1px solid ' + LINE
+            + ';font-size:14px">' + esc(TXT.ref_coupon
+              .replace('{code}', String(rcp[rcq].code || '—'))
+              .replace('{p}', String(rcp[rcq].percent || 0))
+              .replace('{d}', String(rcp[rcq].expires || '—'))) + '</div>');
+        }
+      }
+      var rin = rf.invites || [];
+      if (rin.length) {
+        b.push('<div style="font-size:14px;font-weight:600;margin-top:10px">'
+          + esc(TXT.ref_invites) + '</div>');
+        for (var rvq = 0; rvq < rin.length; rvq++) {
+          var stq = String(rin[rvq].status || 'registered');
+          var stl = TXT['ref_st_' + stq] || stq;
+          b.push('<div style="padding:6px 0;border-bottom:1px solid ' + LINE
+            + ';font-size:14px;opacity:.85">' + esc(String(rin[rvq].name || '—')
+              + ' — ' + stl) + '</div>');
+        }
+      }
+      b.push(btn('https://t.me/share/url?url=' + encodeURIComponent(rf.link)
+        + '&text=' + encodeURIComponent(TXT.ref_share_txt), TXT.ref_share, false));
+      b.push('<a href="#" id="szc-refcopy" style="display:block;text-decoration:none;'
+        + 'text-align:center;margin:10px 0;padding:13px 14px;border-radius:12px;'
+        + 'background:' + CARD + ';color:inherit">' + esc(TXT.ref_copy) + '</a>');
+    }
     /* Task 130: поделиться ботом и скопировать текстовую сводку. */
     if (d.bot_link) {
       b.push(btn('https://t.me/share/url?url=' + encodeURIComponent(d.bot_link)
@@ -1634,6 +1712,14 @@ loadTopics();
       ev.preventDefault();
       haptic('light');
       copyText(summaryText(d), function (ok) { toast(ok ? TXT.copied : TXT.copy_fail); });
+    });
+    var rcp2 = document.getElementById('szc-refcopy');
+    if (rcp2) rcp2.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      haptic('light');
+      copyText((d.ref && d.ref.link) || '', function (ok) {
+        toast(ok ? TXT.ref_copied : TXT.copy_fail);
+      });
     });
   }
   function renderError(diag) {
