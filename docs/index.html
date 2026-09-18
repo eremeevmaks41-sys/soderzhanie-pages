@@ -1349,7 +1349,29 @@ loadTopics();
       ref_share: '📤 Поделиться ссылкой',
       ref_share_txt: 'Поставил своему каналу «Оглавление» — каталог всего архива в шапке. Тебе +7 дней триала по ссылке:',
       ref_copy: '📋 Скопировать ссылку',
-      ref_copied: 'Ссылка скопирована'
+      ref_copied: 'Ссылка скопирована',
+      tab_main: 'Кабинет',
+      tab_ref: 'Реферальная программа',
+      ref_link_l: 'Твоя ссылка',
+      ref_funnel_t: 'Твоя воронка',
+      ref_clicks_l: 'Переходы по ссылке',
+      ref_invited_l: 'Приглашено',
+      ref_trials_l: 'Оформили триал',
+      ref_paid_l: 'Оплатили',
+      ref_rewards_l: 'Наград получено',
+      ref_pending_l: 'Наград ждут решения',
+      ref_empty: 'Данных пока нет — отправь кому-нибудь свою ссылку, отсчёт пойдёт с первого перехода.',
+      ref_in_bot: '🎁 Выбор награды и офферы — в боте',
+      ref_adm_t: 'Общая сводка · владелец',
+      ref_adm_hint: 'те же цифры, что /refstats в боте',
+      ref_adm_7d: '7 дней',
+      ref_adm_30d: '30 дней',
+      ref_adm_line: 'кликов {c} · рег. {r} · триалов {t} · оплат {p} · наград {g} · отмен {x}',
+      ref_adm_conv: 'Конверсия регистрация → оплата',
+      ref_adm_top: 'Топ реферреров (по оплатившим)',
+      ref_adm_top_row: 'id {id} — {k} оплативших',
+      ref_adm_review: 'Ждут ручного ревью',
+      ref_adm_granted_t: 'Наград выдано всего'
     },
     en: {
       no_sub_t: 'No connections yet',
@@ -1409,7 +1431,29 @@ loadTopics();
       ref_share: '📤 Share the link',
       ref_share_txt: 'I set up "Table of Contents" for my channel — the whole archive in a pinned button. You get +7 trial days with this link:',
       ref_copy: '📋 Copy the link',
-      ref_copied: 'Link copied'
+      ref_copied: 'Link copied',
+      tab_main: 'Account',
+      tab_ref: 'Referral program',
+      ref_link_l: 'Your link',
+      ref_funnel_t: 'Your funnel',
+      ref_clicks_l: 'Link visits',
+      ref_invited_l: 'Invited',
+      ref_trials_l: 'Trials started',
+      ref_paid_l: 'Paid',
+      ref_rewards_l: 'Rewards earned',
+      ref_pending_l: 'Rewards pending',
+      ref_empty: 'No data yet — share your referral link; the count starts with the first visit.',
+      ref_in_bot: '🎁 Pick a reward and view offers in the bot',
+      ref_adm_t: 'Owner summary',
+      ref_adm_hint: 'same numbers as /refstats in the bot',
+      ref_adm_7d: '7 days',
+      ref_adm_30d: '30 days',
+      ref_adm_line: 'clicks {c} · reg {r} · trials {t} · paid {p} · rewards {g} · revoked {x}',
+      ref_adm_conv: 'Registration → payment conversion',
+      ref_adm_top: 'Top referrers (by paid)',
+      ref_adm_top_row: 'id {id} — {k} paid',
+      ref_adm_review: 'Awaiting manual review',
+      ref_adm_granted_t: 'Total rewards granted'
     }
   })[L];
   function esc(s) {
@@ -1545,7 +1589,48 @@ loadTopics();
     if (d.bot_link) lines.push(d.bot_link);
     return lines.join('\n');
   }
+  /* Task 147: две вкладки кабинета — «Кабинет» и «Реферальная программа».
+     Вкладка живёт до перезагрузки данных; переключение перерисовывает экран
+     из уже полученного payload — без повторного fetch. */
+  var CAB_TAB = 'main';
+  function tabbar() {
+    var base = 'flex:1;text-align:center;text-decoration:none;padding:11px 6px;'
+      + 'border-radius:11px;font-size:14px;font-weight:600;';
+    var on = base + 'background:' + ACC + ';color:#fffdf8;';
+    var off = base + 'background:' + CARD + ';color:inherit;';
+    return '<div style="display:flex;gap:8px;margin:14px 0 6px">'
+      + '<a href="#" id="szc-tab-main" style="' + (CAB_TAB === 'main' ? on : off)
+      + '">' + esc(TXT.tab_main) + '</a>'
+      + '<a href="#" id="szc-tab-ref" style="' + (CAB_TAB === 'ref' ? on : off)
+      + '">' + esc(TXT.tab_ref) + '</a></div>';
+  }
   function render(d) {
+    ov.innerHTML = (CAB_TAB === 'ref') ? refBody(d) : mainBody(d);
+    var cp = document.getElementById('szc-copy');
+    if (cp) cp.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      haptic('light');
+      copyText(summaryText(d), function (ok) { toast(ok ? TXT.copied : TXT.copy_fail); });
+    });
+    var rcp2 = document.getElementById('szc-refcopy');
+    if (rcp2) rcp2.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      haptic('light');
+      copyText((d.ref && d.ref.link) || '', function (ok) {
+        toast(ok ? TXT.ref_copied : TXT.copy_fail);
+      });
+    });
+    var tabs = [document.getElementById('szc-tab-main'),
+                document.getElementById('szc-tab-ref')];
+    for (var ti = 0; ti < tabs.length; ti++) {
+      if (tabs[ti]) tabs[ti].addEventListener('click', function (ev) {
+        ev.preventDefault();
+        var t = (ev.currentTarget && ev.currentTarget.id === 'szc-tab-ref') ? 'ref' : 'main';
+        if (CAB_TAB !== t) { CAB_TAB = t; haptic('light'); render(d); }
+      });
+    }
+  }
+  function mainBody(d) {
     var sub = d.sub || {};
     var p = d.price || 0;
     var st = sub.status || '';
@@ -1554,6 +1639,7 @@ loadTopics();
       b.push('<div style="font-size:15px;opacity:.65;margin-bottom:14px">'
         + esc(TXT.hello.replace('{n}', d.user.name)) + '</div>');
     }
+    b.push(tabbar());
     var tone = '#8a7f68', title = '', body = '';
     var primary = null, rows = [];
     if (!sub.has) {
@@ -1646,50 +1732,8 @@ loadTopics();
           + '</div></div>');
       }
     }
-    /* Task 142: блок «Партнёрка» — ссылка, статистика, тир, купоны-награды,
-       приглашения. Пустой d.ref → блок не показывается (кабинет не падает). */
-    var rf = d.ref || null;
-    if (rf && rf.link) {
-      b.push('<div style="font-size:15px;font-weight:600;margin:22px 0 4px">'
-        + esc(TXT.ref_t) + '</div>');
-      b.push('<div style="font-size:14px;opacity:.85">'
-        + esc(TXT.ref_stats.replace('{a}', String(rf.invited || 0))
-          .replace('{k}', String(rf.paid || 0))
-          .replace('{r}', String(rf.rewards || 0))) + '</div>');
-      b.push('<div style="font-size:13px;color:' + ACC + ';margin-top:2px">'
-        + esc((rf.next_left ? TXT.ref_tier : TXT.ref_tier_max)
-          .replace('{t}', String(rf.tier || 1))
-          .replace('{n}', String(rf.next_left || 0))) + '</div>');
-      var rcp = rf.coupons || [];
-      if (rcp.length) {
-        b.push('<div style="font-size:14px;font-weight:600;margin-top:10px">'
-          + esc(TXT.ref_coupons) + '</div>');
-        for (var rcq = 0; rcq < rcp.length; rcq++) {
-          b.push('<div style="padding:8px 0;border-bottom:1px solid ' + LINE
-            + ';font-size:14px">' + esc(TXT.ref_coupon
-              .replace('{code}', String(rcp[rcq].code || '—'))
-              .replace('{p}', String(rcp[rcq].percent || 0))
-              .replace('{d}', String(rcp[rcq].expires || '—'))) + '</div>');
-        }
-      }
-      var rin = rf.invites || [];
-      if (rin.length) {
-        b.push('<div style="font-size:14px;font-weight:600;margin-top:10px">'
-          + esc(TXT.ref_invites) + '</div>');
-        for (var rvq = 0; rvq < rin.length; rvq++) {
-          var stq = String(rin[rvq].status || 'registered');
-          var stl = TXT['ref_st_' + stq] || stq;
-          b.push('<div style="padding:6px 0;border-bottom:1px solid ' + LINE
-            + ';font-size:14px;opacity:.85">' + esc(String(rin[rvq].name || '—')
-              + ' — ' + stl) + '</div>');
-        }
-      }
-      b.push(btn('https://t.me/share/url?url=' + encodeURIComponent(rf.link)
-        + '&text=' + encodeURIComponent(TXT.ref_share_txt), TXT.ref_share, false));
-      b.push('<a href="#" id="szc-refcopy" style="display:block;text-decoration:none;'
-        + 'text-align:center;margin:10px 0;padding:13px 14px;border-radius:12px;'
-        + 'background:' + CARD + ';color:inherit">' + esc(TXT.ref_copy) + '</a>');
-    }
+    /* Task 147: блок «Партнёрка» переехал в отдельную вкладку (refBody) —
+       главный экран остаётся про статус, историю, лицензии и акции. */
     /* Task 130: поделиться ботом и скопировать текстовую сводку. */
     if (d.bot_link) {
       b.push(btn('https://t.me/share/url?url=' + encodeURIComponent(d.bot_link)
@@ -1706,21 +1750,130 @@ loadTopics();
           + esc(d.support) + '</a>') + '</div>');
     }
     b.push('</div>');
-    ov.innerHTML = b.join('');
-    var cp = document.getElementById('szc-copy');
-    if (cp) cp.addEventListener('click', function (ev) {
-      ev.preventDefault();
-      haptic('light');
-      copyText(summaryText(d), function (ok) { toast(ok ? TXT.copied : TXT.copy_fail); });
-    });
-    var rcp2 = document.getElementById('szc-refcopy');
-    if (rcp2) rcp2.addEventListener('click', function (ev) {
-      ev.preventDefault();
-      haptic('light');
-      copyText((d.ref && d.ref.link) || '', function (ok) {
-        toast(ok ? TXT.ref_copied : TXT.copy_fail);
-      });
-    });
+    return b.join('');
+  }
+  /* Task 147: вкладка «Реферальная программа» — персональная ссылка, полная
+     воронка (переходы → приглашено → триалы → оплаты → награды), тир,
+     купоны-награды, приглашения; владельцу — общая сводка (/refstats).
+     Пустой d.ref → честный пустой экран, кабинет не падает. */
+  function refBody(d) {
+    var rf = (d && d.ref) || null;
+    var b = ['<div style="' + PAD + '">'];
+    if (d.user && d.user.name) {
+      b.push('<div style="font-size:15px;opacity:.65;margin-bottom:14px">'
+        + esc(TXT.hello.replace('{n}', d.user.name)) + '</div>');
+    }
+    b.push(tabbar());
+    b.push('<div style="font-size:23px;font-weight:700;letter-spacing:.2px">'
+      + esc(TXT.tab_ref) + '</div>');
+    if (!rf || !rf.link) {
+      b.push(para(esc(TXT.ref_empty)));
+      if (d.bot_link) b.push(btn(d.bot_link, TXT.ref_in_bot, false));
+      b.push('</div>');
+      return b.join('');
+    }
+    b.push('<div style="font-size:15px;font-weight:600;margin:14px 0 4px">'
+      + esc(TXT.ref_link_l) + '</div>');
+    b.push('<div style="background:' + CARD + ';border-radius:12px;padding:12px 14px;'
+      + 'font-size:13px;word-break:break-all;font-family:ui-monospace,Menlo,monospace">'
+      + esc(rf.link) + '</div>');
+    b.push('<div style="font-size:15px;font-weight:600;margin:20px 0 2px">'
+      + esc(TXT.ref_funnel_t) + '</div>');
+    var fn = [[TXT.ref_clicks_l, rf.clicks], [TXT.ref_invited_l, rf.invited],
+              [TXT.ref_trials_l, rf.trials], [TXT.ref_paid_l, rf.paid],
+              [TXT.ref_rewards_l, rf.rewards], [TXT.ref_pending_l, rf.pending]];
+    var anyData = false;
+    for (var fi = 0; fi < fn.length; fi++) {
+      anyData = anyData || (fn[fi][1] > 0);
+      b.push('<div style="display:flex;justify-content:space-between;gap:12px;'
+        + 'padding:9px 0;border-bottom:1px solid ' + LINE + ';font-size:14px">'
+        + '<span style="opacity:.75">' + esc(fn[fi][0]) + '</span>'
+        + '<span style="font-weight:600">' + esc(String(fn[fi][1] || 0)) + '</span></div>');
+    }
+    if (!anyData) b.push('<div style="font-size:13px;opacity:.6;margin-top:8px">'
+      + esc(TXT.ref_empty) + '</div>');
+    b.push('<div style="font-size:13px;color:' + ACC + ';margin-top:10px">'
+      + esc((rf.next_left ? TXT.ref_tier : TXT.ref_tier_max)
+        .replace('{t}', String(rf.tier || 1))
+        .replace('{n}', String(rf.next_left || 0))) + '</div>');
+    var rcp = rf.coupons || [];
+    if (rcp.length) {
+      b.push('<div style="font-size:14px;font-weight:600;margin-top:10px">'
+        + esc(TXT.ref_coupons) + '</div>');
+      for (var rcq = 0; rcq < rcp.length; rcq++) {
+        b.push('<div style="padding:8px 0;border-bottom:1px solid ' + LINE
+          + ';font-size:14px">' + esc(TXT.ref_coupon
+            .replace('{code}', String(rcp[rcq].code || '—'))
+            .replace('{p}', String(rcp[rcq].percent || 0))
+            .replace('{d}', String(rcp[rcq].expires || '—'))) + '</div>');
+      }
+    }
+    var rin = rf.invites || [];
+    if (rin.length) {
+      b.push('<div style="font-size:14px;font-weight:600;margin-top:10px">'
+        + esc(TXT.ref_invites) + '</div>');
+      for (var rvq = 0; rvq < rin.length; rvq++) {
+        var stq = String(rin[rvq].status || 'registered');
+        var stl = TXT['ref_st_' + stq] || stq;
+        b.push('<div style="padding:6px 0;border-bottom:1px solid ' + LINE
+          + ';font-size:14px;opacity:.85">' + esc(String(rin[rvq].name || '—')
+            + ' — ' + stl) + '</div>');
+      }
+    }
+    var adm = rf.admin || null;
+    if (adm) {
+      b.push('<div style="font-size:15px;font-weight:600;margin:22px 0 2px">'
+        + esc(TXT.ref_adm_t) + '</div>');
+      b.push('<div style="font-size:12px;opacity:.55;margin:0 0 4px">'
+        + esc(TXT.ref_adm_hint) + '</div>');
+      var per = [[TXT.ref_adm_7d, adm.d7], [TXT.ref_adm_30d, adm.d30]];
+      for (var pi = 0; pi < per.length; pi++) {
+        var bb = per[pi][1] || {};
+        b.push('<div style="padding:9px 0;border-bottom:1px solid ' + LINE + ';font-size:14px">'
+          + '<div style="font-weight:600">' + esc(per[pi][0]) + '</div>'
+          + '<div style="font-size:13px;opacity:.8;margin-top:2px">'
+          + esc(TXT.ref_adm_line
+            .replace('{c}', String(bb.clicks || 0)).replace('{r}', String(bb.reg || 0))
+            .replace('{t}', String(bb.trials || 0)).replace('{p}', String(bb.paid || 0))
+            .replace('{g}', String(bb.granted || 0)).replace('{x}', String(bb.revoked || 0)))
+          + '</div></div>');
+      }
+      if (adm.conv) {
+        b.push('<div style="display:flex;justify-content:space-between;gap:12px;'
+          + 'padding:9px 0;border-bottom:1px solid ' + LINE + ';font-size:14px">'
+          + '<span style="opacity:.75">' + esc(TXT.ref_adm_conv) + '</span>'
+          + '<span style="font-weight:600">' + esc(adm.conv) + '</span></div>');
+      }
+      var top = adm.top || [];
+      if (top.length) {
+        b.push('<div style="font-size:14px;font-weight:600;margin-top:10px">'
+          + esc(TXT.ref_adm_top) + '</div>');
+        for (var qi = 0; qi < top.length; qi++) {
+          b.push('<div style="padding:6px 0;border-bottom:1px solid ' + LINE
+            + ';font-size:14px;opacity:.85">' + esc(TXT.ref_adm_top_row
+              .replace('{id}', String(top[qi].id || '—'))
+              .replace('{k}', String(top[qi].paid || 0))) + '</div>');
+        }
+      }
+      if (adm.review > 0) {
+        b.push('<div style="display:flex;justify-content:space-between;gap:12px;'
+          + 'padding:9px 0;border-bottom:1px solid ' + LINE + ';font-size:14px;color:'
+          + ACC + '"><span>' + esc(TXT.ref_adm_review) + '</span>'
+          + '<span style="font-weight:600">' + esc(String(adm.review)) + '</span></div>');
+      }
+      b.push('<div style="display:flex;justify-content:space-between;gap:12px;'
+        + 'padding:9px 0;font-size:14px"><span style="opacity:.75">'
+        + esc(TXT.ref_adm_granted_t) + '</span>'
+        + '<span style="font-weight:600">' + esc(String(adm.granted || 0)) + '</span></div>');
+    }
+    b.push(btn('https://t.me/share/url?url=' + encodeURIComponent(rf.link)
+      + '&text=' + encodeURIComponent(TXT.ref_share_txt), TXT.ref_share, false));
+    b.push('<a href="#" id="szc-refcopy" style="display:block;text-decoration:none;'
+      + 'text-align:center;margin:10px 0;padding:13px 14px;border-radius:12px;'
+      + 'background:' + CARD + ';color:inherit">' + esc(TXT.ref_copy) + '</a>');
+    if (d.bot_link) b.push(btn(d.bot_link, TXT.ref_in_bot, false));
+    b.push('</div>');
+    return b.join('');
   }
   function renderError(diag) {
     diag = diag || {};
