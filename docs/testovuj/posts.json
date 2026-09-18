@@ -1,20 +1,31 @@
 {
   "version": 1,
-  "updated_at": "2026-09-17T16:09:46+03:00",
+  "updated_at": "2026-09-18T11:22:27+03:00",
   "channel": {
     "name": "тестовый 1",
     "url": "https://t.me/Testovuj"
   },
   "posts": [
     {
+      "id": 505,
+      "date": "2026-09-18",
+      "time": "11:19",
+      "title": "ну и жди",
+      "preview": "",
+      "tags": [
+        "#разное"
+      ],
+      "kind": "text",
+      "url": "https://t.me/Testovuj/505",
+      "src": ""
+    },
+    {
       "id": 504,
       "date": "2026-09-17",
       "time": "16:05",
       "title": "я жду",
       "preview": "",
-      "tags": [
-        "#разное"
-      ],
+      "tags": [],
       "kind": "text",
       "url": "https://t.me/Testovuj/504",
       "src": ""
