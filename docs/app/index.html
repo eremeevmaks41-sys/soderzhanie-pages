@@ -11,6 +11,26 @@
    Пересборка: scripts/build_app_shell.py */
 window.__TOC_DEFAULT = 'testovuj';
 (function () {
+  /* Task 162: самолечение кэша WebView. GitHub Pages держит max-age=600,
+     а WebView Telegram отдавал старый HTML и после деплоя (репорт босса:
+     «проблема осталась» при живом фиксе). Первая загрузка новой версии
+     перезагружает страницу с ?cbv=<ver> — URL другой, устаревший кэш мимо;
+     дальше этот URL переиспользуется и честно ревалидируется по ETag.
+     Один раз за сессию (sessionStorage); если cbv уже в query — молчим. */
+  var CBV = 'v61-ru';
+  if (location.search.indexOf('cbv=') !== -1) return;
+  try {
+    var s = window.sessionStorage;
+    if (s && s.getItem('szShellV') === CBV) return;
+    if (s) s.setItem('szShellV', CBV);
+  } catch (e) {}
+  try {
+    location.replace(location.pathname + location.search
+      + (location.search ? '&' : '?') + 'cbv=' + CBV
+      + (location.hash || ''));
+  } catch (e) {}
+})();
+(function () {
   function sp() {
     try {
       var q = new URLSearchParams(location.search);
@@ -314,7 +334,7 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v60-ru</span></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v61-ru</span></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
@@ -1657,38 +1677,33 @@ loadTopics();
     var rest = m[2] || '';
     return rest === '' || rest.charAt(0) === '?';
   }
-  /* Стратегия ядра оглавлений openInTelegram (лекарство «тихого случая»
-     для iPhone, проверено вживую через Safari Inspector, MyRadio):
-     уход приложения в фон фиксируем через visibilitychange; если за 1.5 с
-     кабинет так и не свернулся — на iOS close() сам убирает кабинет, за
-     ним уже открыт чат бота (deep-link payload доставлен); если клиент
-     проигнорировал и close — последний шанс openLink (видимый переход,
-     Telegram-iOS #1670: внешний браузер отдаёт t.me обратно в Telegram).
-     Вне iOS — сразу openLink (тихого случая там нет, это чистая страховка). */
+  /* Лекарство — как у постов оглавления (MyRadio/ядро, iPhone, Safari
+     Inspector): openTelegramLink уходит в нативный слой СРАЗУ из тапа и
+     навигация выполняется в фоне, поэтому для ссылки на ТОГО ЖЕ бота
+     close() корректен в ЛЮБОМ исходе: видимый переход случился — мини-апп
+     уже свёрнут, close() ничего не ломает; случился «тихий случай» —
+     close() убирает кабинет и открывает чат бота; не случилось ничего —
+     под close() хост-чат, он и есть цель. Поэтому сворачиваем БЫСТРО и
+     БЕЗ УСЛОВИЙ: ни visibilitychange-детекта (скрытость может не наступить
+     — ровно репорт босса на v58–v60), ни долгого ожидания 1.5 с
+     (кажется, что тап мёртвый — урок MyRadio). */
   function cabOpenBot(href) {
     toast(TXT.opening);
-    var settled = false;
-    function onVis() {
-      if (document.hidden) {
-        settled = true;
-        document.removeEventListener('visibilitychange', onVis);
-      }
-    }
-    document.addEventListener('visibilitychange', onVis);
     try { w.openTelegramLink(href); } catch (e) {}
     setTimeout(function () {
-      document.removeEventListener('visibilitychange', onVis);
-      if (settled) return;
-      if (w.platform === 'ios' && w.close) {
-        try { w.close(); } catch (e) {}
-        setTimeout(function () {
-          if (!settled && w.openLink) {
-            try { w.openLink(href, { try_instant_view: false }); } catch (e) {}
-          }
-        }, 800);
-      } else if (w.openLink) {
-        try { w.openLink(href, { try_instant_view: false }); } catch (e) {}
-      }
+      try { if (w.close) w.close(); } catch (e) {}
+    }, 350);
+    /* Последний шанс, если клиент проигнорировал close(): видимый переход
+       openLink (браузер отдаёт t.me обратно в Telegram, Telegram-iOS #1670),
+       затем навигация в этом же табе — WKWebView новых табов не открывает,
+       location.href в ядре спасал даже без моста. Оба шага — только пока
+       страница реально видима (document.hidden). */
+    setTimeout(function () {
+      if (document.hidden) return;
+      try { if (w.openLink) w.openLink(href, { try_instant_view: false }); } catch (e) {}
+      setTimeout(function () {
+        if (!document.hidden) { try { window.location.href = href; } catch (e) {} }
+      }, 800);
     }, 1500);
   }
   function tabbar() {
