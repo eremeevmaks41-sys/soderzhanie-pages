@@ -17,7 +17,7 @@ window.__TOC_DEFAULT = 'testovuj';
      перезагружает страницу с ?cbv=<ver> — URL другой, устаревший кэш мимо;
      дальше этот URL переиспользуется и честно ревалидируется по ETag.
      Один раз за сессию (sessionStorage); если cbv уже в query — молчим. */
-  var CBV = 'v62-ru';
+  var CBV = 'v63-ru';
   if (location.search.indexOf('cbv=') !== -1) return;
   try {
     var s = window.sessionStorage;
@@ -334,7 +334,7 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v62-ru</span></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v63-ru</span></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
@@ -1410,6 +1410,10 @@ loadTopics();
       ref_copied: 'Ссылка скопирована',
       tab_main: 'Кабинет',
       tab_ref: 'Реферальная программа',
+      tab_extra: 'Доп. услуги',
+      extra_p1: 'Кастомизация не входит ни в один тариф: каталог собирается автоматически — рубрики, месяцы, форматы — и устроен одинаково для всех. Так он стабилен и бесплатно получает обновления.',
+      extra_p2: 'Если нужна разработка под личные нужды или уникальный дизайн — такая работа выполняется отдельно и оплачивается по договорённости: напишите о задаче, обсудим сроки и стоимость.',
+      extra_c2a: '💬 Обсудить задачу',
       ref_link_l: 'Твоя ссылка',
       ref_funnel_t: 'Твоя воронка',
       ref_clicks_l: 'Переходы по ссылке',
@@ -1488,6 +1492,10 @@ loadTopics();
       ref_copied: 'Link copied',
       tab_main: 'Account',
       tab_ref: 'Referral program',
+      tab_extra: 'Add-ons',
+      extra_p1: 'Custom work is not part of any plan: the catalog is assembled automatically — topics, months, formats — and works the same for everyone. That keeps it stable and updates free.',
+      extra_p2: 'Need development for your own needs or a unique design? Such work is done separately and paid by agreement: tell us about the task and we will discuss the timing and the price.',
+      extra_c2a: '💬 Discuss a task',
       ref_link_l: 'Your link',
       ref_funnel_t: 'Your funnel',
       ref_clicks_l: 'Link visits',
@@ -1659,18 +1667,21 @@ loadTopics();
      share (диалог), поддержка (чужой чат), direct-ссылка миниаппа
      оглавления (экран меняется). */
   function tabbar() {
-    var base = 'flex:1;text-align:center;text-decoration:none;padding:11px 6px;'
-      + 'border-radius:11px;font-size:14px;font-weight:600;';
+    var base = 'flex:1;text-align:center;text-decoration:none;padding:11px 4px;'
+      + 'border-radius:11px;font-size:14px;font-weight:600;line-height:1.25;';
     var on = base + 'background:' + ACC + ';color:#fffdf8;';
     var off = base + 'background:' + CARD + ';color:inherit;';
     return '<div style="display:flex;gap:8px;margin:14px 0 6px">'
       + '<a href="#" id="szc-tab-main" style="' + (CAB_TAB === 'main' ? on : off)
       + '">' + esc(TXT.tab_main) + '</a>'
       + '<a href="#" id="szc-tab-ref" style="' + (CAB_TAB === 'ref' ? on : off)
-      + '">' + esc(TXT.tab_ref) + '</a></div>';
+      + '">' + esc(TXT.tab_ref) + '</a>'
+      + '<a href="#" id="szc-tab-extra" style="' + (CAB_TAB === 'extra' ? on : off)
+      + '">' + esc(TXT.tab_extra) + '</a></div>';
   }
   function render(d) {
-    ov.innerHTML = (CAB_TAB === 'ref') ? refBody(d) : mainBody(d);
+    ov.innerHTML = (CAB_TAB === 'ref') ? refBody(d)
+      : (CAB_TAB === 'extra') ? extraBody(d) : mainBody(d);
     var cp = document.getElementById('szc-copy');
     if (cp) cp.addEventListener('click', function (ev) {
       ev.preventDefault();
@@ -1686,11 +1697,14 @@ loadTopics();
       });
     });
     var tabs = [document.getElementById('szc-tab-main'),
-                document.getElementById('szc-tab-ref')];
+                document.getElementById('szc-tab-ref'),
+                document.getElementById('szc-tab-extra')];
     for (var ti = 0; ti < tabs.length; ti++) {
       if (tabs[ti]) tabs[ti].addEventListener('click', function (ev) {
         ev.preventDefault();
-        var t = (ev.currentTarget && ev.currentTarget.id === 'szc-tab-ref') ? 'ref' : 'main';
+        var id = (ev.currentTarget && ev.currentTarget.id) || '';
+        var t = (id === 'szc-tab-ref') ? 'ref'
+          : (id === 'szc-tab-extra') ? 'extra' : 'main';
         if (CAB_TAB !== t) { CAB_TAB = t; haptic('light'); render(d); }
       });
     }
@@ -1925,6 +1939,32 @@ loadTopics();
     b.push('<a href="#" id="szc-refcopy" style="display:block;text-decoration:none;'
       + 'text-align:center;margin:10px 0;padding:13px 14px;border-radius:12px;'
       + 'background:' + CARD + ';color:inherit">' + esc(TXT.ref_copy) + '</a>');
+    b.push('</div>');
+    return b.join('');
+  }
+  /* Task 167: вкладка «Доп. услуги» — честная рамка ожиданий: кастомизации
+     под нужды клиента нет НИ В ОДНОМ тарифе (каталог собирается автоматически
+     и устроен одинаково у всех — отсюда стабильность и бесплатные обновления).
+     Разработка под личные нужды или уникальный дизайн — отдельная услуга,
+     оплачивается по договорённости; кнопка ведёт в чат поддержки — чужой
+     чат, переход работает (правило Task 163). */
+  function extraBody(d) {
+    var b = ['<div style="' + PAD + '">'];
+    if (d.user && d.user.name) {
+      b.push('<div style="font-size:15px;opacity:.65;margin-bottom:14px">'
+        + esc(TXT.hello.replace('{n}', d.user.name)) + '</div>');
+    }
+    b.push(tabbar());
+    b.push('<div style="font-size:23px;font-weight:700;letter-spacing:.2px">'
+      + esc(TXT.tab_extra) + '</div>');
+    b.push('<div style="background:' + CARD + ';border-radius:12px;'
+      + 'padding:12px 14px;margin-top:14px;font-size:14.5px;line-height:1.5">'
+      + esc(TXT.extra_p1) + '</div>');
+    b.push(para(esc(TXT.extra_p2)));
+    if (d.support) {
+      b.push(btn('https://t.me/' + esc(String(d.support).replace(/^@+/, '')),
+        TXT.extra_c2a, true));
+    }
     b.push('</div>');
     return b.join('');
   }
