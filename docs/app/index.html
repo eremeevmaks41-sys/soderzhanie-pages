@@ -314,7 +314,7 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v58-ru</span></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v59-ru</span></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
@@ -1316,16 +1316,21 @@ loadTopics();
      Direct-Link, старые клиенты. Если есть и initData, и токен — initData
      основной (там настоящее имя). */
   var cabTok = '';
-  if (String(window.__TOC_STARTPARAM || '').indexOf('_cab_') === 0) {
-    cabTok = String(window.__TOC_STARTPARAM).slice(5);
-  }
+  var cabTokLang = '';   /* Task 161: язык бота хвостом startapp (_ru/_en) */
+  (function () {
+    var sp = String(window.__TOC_STARTPARAM || '');
+    if (sp.indexOf('_cab_') !== 0) return;
+    cabTok = sp.slice(5);
+    var lm = /_(ru|en)$/.exec(cabTok);
+    if (lm) { cabTokLang = lm[1]; cabTok = cabTok.slice(0, lm.index); }
+  })();
   var qLang = '';
   try { qLang = new URLSearchParams(location.search).get('cablang') || ''; } catch (e) {}
   var navLang = '';
   try { navLang = String(navigator.language || navigator.userLanguage || ''); } catch (e) {}
   var L = (qLang === 'ru' || qLang === 'en') ? qLang
-    : (String(tgUser.language_code || '').toLowerCase().indexOf('ru') === 0 ? 'ru'
-    : (navLang.toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en'));
+    : (cabTokLang || (String(tgUser.language_code || '').toLowerCase().indexOf('ru') === 0 ? 'ru'
+    : (navLang.toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en')));
   var TXT = ({
     ru: {
       no_sub_t: 'Пока нет подключений',
