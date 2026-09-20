@@ -17,7 +17,7 @@ window.__TOC_DEFAULT = 'testovuj';
      перезагружает страницу с ?cbv=<ver> — URL другой, устаревший кэш мимо;
      дальше этот URL переиспользуется и честно ревалидируется по ETag.
      Один раз за сессию (sessionStorage); если cbv уже в query — молчим. */
-  var CBV = 'v61-ru';
+  var CBV = 'v62-ru';
   if (location.search.indexOf('cbv=') !== -1) return;
   try {
     var s = window.sessionStorage;
@@ -334,7 +334,7 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v61-ru</span></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v62-ru</span></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
@@ -1367,11 +1367,7 @@ loadTopics();
       del_m: 'Страница снята. Вернуть обслуживание можно оплатой месяца — откройте бота.',
       trial_hint: 'Дальше — ⭐{p}/мес. Автосписаний нет: продлевать будете только сами.',
       paid_hint: 'Автосписаний нет: следующий месяц подключается только явной оплатой.',
-      renew: '💰 Продлить месяц · ⭐{p}',
-      payfwd: '💰 Оплатить месяц вперёд · ⭐{p}',
       open_toc: '📖 Открыть оглавление',
-      bot: 'Открыть бота',
-      opening: 'Открываю бота…',
       support: 'Поддержка: {s}',
       hist: 'История оплат',
       hist_empty: 'Оплаты появятся здесь после первого продления.',
@@ -1423,7 +1419,6 @@ loadTopics();
       ref_rewards_l: 'Наград получено',
       ref_pending_l: 'Наград ждут решения',
       ref_empty: 'Данных пока нет — отправь кому-нибудь свою ссылку, отсчёт пойдёт с первого перехода.',
-      ref_in_bot: '🎁 Выбор награды и офферы — в боте',
       ref_adm_t: 'Общая сводка · владелец',
       ref_adm_hint: 'те же цифры, что /refstats в боте',
       ref_adm_7d: '7 дней',
@@ -1450,11 +1445,7 @@ loadTopics();
       del_m: 'The page has been taken down. Service can be restored by paying for a month — open the bot.',
       trial_hint: 'Then ⭐{p}/mo. No auto-charges: you only ever renew it yourself.',
       paid_hint: 'No auto-charges: the next month is added only by an explicit payment.',
-      renew: '💰 Renew a month · ⭐{p}',
-      payfwd: '💰 Pay a month ahead · ⭐{p}',
       open_toc: '📖 Open the table of contents',
-      bot: 'Open the bot',
-      opening: 'Opening the bot…',
       support: 'Support: {s}',
       hist: 'Payment history',
       hist_empty: 'Payments will appear here after the first renewal.',
@@ -1506,7 +1497,6 @@ loadTopics();
       ref_rewards_l: 'Rewards earned',
       ref_pending_l: 'Rewards pending',
       ref_empty: 'No data yet — share your referral link; the count starts with the first visit.',
-      ref_in_bot: '🎁 Pick a reward and view offers in the bot',
       ref_adm_t: 'Owner summary',
       ref_adm_hint: 'same numbers as /refstats in the bot',
       ref_adm_7d: '7 days',
@@ -1656,56 +1646,18 @@ loadTopics();
      Вкладка живёт до перезагрузки данных; переключение перерисовывает экран
      из уже полученного payload — без повторного fetch. */
   var CAB_TAB = 'main';
-  /* Task 160: кнопки кабинета («Открыть бота», «Продлить», «Выбор награды»)
-     ведут в ТОГО ЖЕ бота, из чата которого открыт мини-апп. openTelegramLink
-     на того же бота смены экрана не даёт (чат уже позади кабинета) — тап
-     отвечал хаптикой, а переход «не происходил». Храним имя бота из payload
-     и распознаём «тихий случай». */
-  var cabBotU = '';
-  function cabBotOf(href) {
-    var m = /^https:\/\/t\.me\/([^\/?#]+)/i.exec(href || '');
-    return m ? m[1].toLowerCase() : '';
-  }
-  /* Тот же бот И только чат-ссылка: t.me/<bot> или t.me/<bot>?start=…
-     Direct-ссылка на мини-апп (t.me/<bot>/<app>?startapp=…) реально
-     переключает экран и под фолбэк не попадает; t.me/share и чужие чаты —
-     тем более. */
-  function cabSameBot(href) {
-    if (!cabBotU) return false;
-    var m = /^https:\/\/t\.me\/([^\/?#]+)([^#]*)$/i.exec(href || '');
-    if (!m || m[1].toLowerCase() !== cabBotU) return false;
-    var rest = m[2] || '';
-    return rest === '' || rest.charAt(0) === '?';
-  }
-  /* Лекарство — как у постов оглавления (MyRadio/ядро, iPhone, Safari
-     Inspector): openTelegramLink уходит в нативный слой СРАЗУ из тапа и
-     навигация выполняется в фоне, поэтому для ссылки на ТОГО ЖЕ бота
-     close() корректен в ЛЮБОМ исходе: видимый переход случился — мини-апп
-     уже свёрнут, close() ничего не ломает; случился «тихий случай» —
-     close() убирает кабинет и открывает чат бота; не случилось ничего —
-     под close() хост-чат, он и есть цель. Поэтому сворачиваем БЫСТРО и
-     БЕЗ УСЛОВИЙ: ни visibilitychange-детекта (скрытость может не наступить
-     — ровно репорт босса на v58–v60), ни долгого ожидания 1.5 с
-     (кажется, что тап мёртвый — урок MyRadio). */
-  function cabOpenBot(href) {
-    toast(TXT.opening);
-    try { w.openTelegramLink(href); } catch (e) {}
-    setTimeout(function () {
-      try { if (w.close) w.close(); } catch (e) {}
-    }, 350);
-    /* Последний шанс, если клиент проигнорировал close(): видимый переход
-       openLink (браузер отдаёт t.me обратно в Telegram, Telegram-iOS #1670),
-       затем навигация в этом же табе — WKWebView новых табов не открывает,
-       location.href в ядре спасал даже без моста. Оба шага — только пока
-       страница реально видима (document.hidden). */
-    setTimeout(function () {
-      if (document.hidden) return;
-      try { if (w.openLink) w.openLink(href, { try_instant_view: false }); } catch (e) {}
-      setTimeout(function () {
-        if (!document.hidden) { try { window.location.href = href; } catch (e) {} }
-      }, 800);
-    }, 1500);
-  }
+  /* Task 163: кнопки, ведущие в чат ТОГО ЖЕ бота («Открыть бота»,
+     «Продлить месяц», «Выбор награды»), убраны СОВСЕМ. Диагноз босса
+     (v58–v61 не помогли, проверено на живом iPhone): если в фоне открыт
+     ИНОЙ чат — openTelegramLink переход делает; если в фоне ХОСТ-чат
+     миниаппа (наш бот, единственный реальный сценарий кабинета) —
+     видимого перехода нет НИКОГДА, это поведение клиента, из JS оно
+     не лечится ни openTelegramLink, ни close()/openLink/location.href
+     из таймеров. Мёртвая кнопка смущает пользователей — вместо неё
+     честный текст-подсказка; до бота один свайп вниз, кабинет и так
+     открыт из чата бота. Остались только реально работающие ссылки:
+     share (диалог), поддержка (чужой чат), direct-ссылка миниаппа
+     оглавления (экран меняется). */
   function tabbar() {
     var base = 'flex:1;text-align:center;text-decoration:none;padding:11px 6px;'
       + 'border-radius:11px;font-size:14px;font-weight:600;';
@@ -1718,7 +1670,6 @@ loadTopics();
       + '">' + esc(TXT.tab_ref) + '</a></div>';
   }
   function render(d) {
-    cabBotU = cabBotOf(d.bot_link || '');
     ov.innerHTML = (CAB_TAB === 'ref') ? refBody(d) : mainBody(d);
     var cp = document.getElementById('szc-copy');
     if (cp) cp.addEventListener('click', function (ev) {
@@ -1755,34 +1706,25 @@ loadTopics();
     }
     b.push(tabbar());
     var tone = '#8a7f68', title = '', body = '';
-    var primary = null, rows = [];
+    var rows = [];
     if (!sub.has) {
       title = TXT.no_sub_t; body = TXT.no_sub_m;
-      rows.push([d.bot_link || '', TXT.bot]);
     } else if (st === 'pending_admin' || st === 'pending_build') {
       title = TXT.prep_t; body = TXT.prep_m; tone = dark ? '#93A3BC' : '#6b7a8f';
-      rows.push([d.bot_link || '', TXT.bot]);
     } else if (st === 'trial') {
       title = TXT.trial_t; tone = ACC;
       body = TXT.trial_hint.replace('{p}', p);
-      primary = [d.renew_link || d.bot_link || '', TXT.payfwd.replace('{p}', p)];
       if (d.app_link) rows.push([d.app_link, TXT.open_toc]);
     } else if (st === 'paid' && sub.paid_active) {
       title = TXT.paid_t; tone = dark ? '#34D399' : '#15803D';
       body = TXT.paid_hint;
-      primary = [d.renew_link || d.bot_link || '', TXT.renew.replace('{p}', p)];
       if (d.app_link) rows.push([d.app_link, TXT.open_toc]);
     } else if (st === 'suspended') {
       title = TXT.susp_t; body = TXT.susp_m; tone = dark ? '#FBBF24' : '#B45309';
-      rows.push([d.bot_link || '', TXT.bot]);
     } else if (st === 'ended') {
       title = TXT.ended_t; body = TXT.ended_m; tone = dark ? '#F87171' : '#B3264C';
-      primary = [d.renew_link || d.bot_link || '', TXT.renew.replace('{p}', p)];
     } else if (st === 'deleted') {
       title = TXT.del_t; body = TXT.del_m;
-      rows.push([d.bot_link || '', TXT.bot]);
-    } else {
-      rows.push([d.bot_link || '', TXT.bot]);
     }
     b.push(bar(tone));
     b.push('<div style="font-size:23px;font-weight:700;letter-spacing:.2px">' + title + '</div>');
@@ -1799,7 +1741,6 @@ loadTopics();
       if (meta.length) b.push(para(esc(meta.join(' · '))));
     }
     if (body) b.push(para(esc(body)));
-    if (primary && primary[0]) b.push(btn(primary[0], primary[1], true));
     for (var i = 0; i < rows.length; i++) {
       if (rows[i][0]) b.push(btn(rows[i][0], rows[i][1], false));
     }
@@ -1882,7 +1823,6 @@ loadTopics();
       + esc(TXT.tab_ref) + '</div>');
     if (!rf || !rf.link) {
       b.push(para(esc(TXT.ref_empty)));
-      if (d.bot_link) b.push(btn(d.bot_link, TXT.ref_in_bot, false));
       b.push('</div>');
       return b.join('');
     }
@@ -1985,7 +1925,6 @@ loadTopics();
     b.push('<a href="#" id="szc-refcopy" style="display:block;text-decoration:none;'
       + 'text-align:center;margin:10px 0;padding:13px 14px;border-radius:12px;'
       + 'background:' + CARD + ';color:inherit">' + esc(TXT.ref_copy) + '</a>');
-    if (d.bot_link) b.push(btn(d.bot_link, TXT.ref_in_bot, false));
     b.push('</div>');
     return b.join('');
   }
@@ -2054,11 +1993,9 @@ loadTopics();
     var href = t.getAttribute('href') || '';
     if (w && w.openTelegramLink && /^https:\/\/t\.me\//.test(href)) {
       ev.preventDefault();
-      /* Task 160/162: ссылка на того же бота — «тихий случай» (экран не
-         меняется): cabOpenBot добавит фолбэк ядра (close → openLink);
-         остальные ссылки — как раньше */
-      if (cabSameBot(href)) cabOpenBot(href);
-      else w.openTelegramLink(href);
+      /* Task 163: same-bot ветки больше нет — ссылки на чат того же бота
+         из кабинета убраны вовсе; остались share/поддержка/direct-миниапп */
+      w.openTelegramLink(href);
     }
   });
   load();
