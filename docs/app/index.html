@@ -314,7 +314,7 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v57-ru</span></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v58-ru</span></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
@@ -347,7 +347,7 @@ if (!window.SZ_CONFIG && !window.__TOC_CABINET) {
       if (wrapEl && wrapEl.parentNode) wrapEl.parentNode.removeChild(wrapEl);
       var d = document.createElement('div');
       d.setAttribute('style', 'position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;'
-        + 'font-family:'Manrope',-apple-system,Segoe UI,Roboto,sans-serif;background:#0E1624;'
+        + 'font-family:\'Manrope\',-apple-system,Segoe UI,Roboto,sans-serif;background:#0E1624;'
         + 'color:#E9EFF9;display:flex;align-items:center;justify-content:center;margin:0');
       d.innerHTML = '<div style="text-align:center;padding:24px;max-width:420px">'
         + '<div style="font-size:44px;margin-bottom:12px">📖</div>'
@@ -1629,6 +1629,47 @@ loadTopics();
      Вкладка живёт до перезагрузки данных; переключение перерисовывает экран
      из уже полученного payload — без повторного fetch. */
   var CAB_TAB = 'main';
+  /* Task 160: кнопки кабинета («Открыть бота», «Продлить», «Выбор награды»)
+     ведут в ТОГО ЖЕ бота, из чата которого открыт мини-апп. openTelegramLink
+     на того же бота смены экрана не даёт (чат уже позади кабинета) — тап
+     отвечал хаптикой, а переход «не происходил». Храним имя бота из payload
+     и распознаём «тихий случай». */
+  var cabBotU = '';
+  function cabBotOf(href) {
+    var m = /^https:\/\/t\.me\/([^\/?#]+)/i.exec(href || '');
+    return m ? m[1].toLowerCase() : '';
+  }
+  /* Тот же бот И только чат-ссылка: t.me/<bot> или t.me/<bot>?start=…
+     Direct-ссылка на мини-апп (t.me/<bot>/<app>?startapp=…) реально
+     переключает экран и под фолбэк не попадает; t.me/share и чужие чаты —
+     тем более. */
+  function cabSameBot(href) {
+    if (!cabBotU) return false;
+    var m = /^https:\/\/t\.me\/([^\/?#]+)([^#]*)$/i.exec(href || '');
+    if (!m || m[1].toLowerCase() !== cabBotU) return false;
+    var rest = m[2] || '';
+    return rest === '' || rest.charAt(0) === '?';
+  }
+  /* Стратегия ядра (openInTelegram): уход приложения в фон фиксируем через
+     visibilitychange; если за 1.5 с не свернулся — close() сам убирает
+     кабинет, за ним уже открыт чат бота (deep-link payload доставлен).
+     close() без жеста пользователя разрешён официальным API. */
+  function cabOpenBot(href) {
+    var settled = false;
+    function onVis() {
+      if (document.hidden) {
+        settled = true;
+        document.removeEventListener('visibilitychange', onVis);
+      }
+    }
+    document.addEventListener('visibilitychange', onVis);
+    try { w.openTelegramLink(href); } catch (e) {}
+    setTimeout(function () {
+      document.removeEventListener('visibilitychange', onVis);
+      if (settled) return;
+      try { if (w.close) w.close(); } catch (e) {}
+    }, 1500);
+  }
   function tabbar() {
     var base = 'flex:1;text-align:center;text-decoration:none;padding:11px 6px;'
       + 'border-radius:11px;font-size:14px;font-weight:600;';
@@ -1641,6 +1682,7 @@ loadTopics();
       + '">' + esc(TXT.tab_ref) + '</a></div>';
   }
   function render(d) {
+    cabBotU = cabBotOf(d.bot_link || '');
     ov.innerHTML = (CAB_TAB === 'ref') ? refBody(d) : mainBody(d);
     var cp = document.getElementById('szc-copy');
     if (cp) cp.addEventListener('click', function (ev) {
@@ -1976,7 +2018,10 @@ loadTopics();
     var href = t.getAttribute('href') || '';
     if (w && w.openTelegramLink && /^https:\/\/t\.me\//.test(href)) {
       ev.preventDefault();
-      w.openTelegramLink(href);
+      /* Task 160: ссылка на того же бота — «тихий случай» (экран не меняется):
+         cabOpenBot добавит close() через 1.5 с; остальные ссылки — как раньше */
+      if (cabSameBot(href)) cabOpenBot(href);
+      else w.openTelegramLink(href);
     }
   });
   load();
