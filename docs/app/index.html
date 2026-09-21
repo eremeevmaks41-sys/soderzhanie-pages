@@ -17,7 +17,7 @@ window.__TOC_DEFAULT = 'testovuj';
      перезагружает страницу с ?cbv=<ver> — URL другой, устаревший кэш мимо;
      дальше этот URL переиспользуется и честно ревалидируется по ETag.
      Один раз за сессию (sessionStorage); если cbv уже в query — молчим. */
-  var CBV = 'v63-ru';
+  var CBV = 'v64-ru';
   if (location.search.indexOf('cbv=') !== -1) return;
   try {
     var s = window.sessionStorage;
@@ -334,7 +334,7 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v63-ru</span></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v64-ru</span></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
@@ -1415,6 +1415,9 @@ loadTopics();
       stale_t: 'Сессия кабинета устарела',
       stale_m: 'Нажмите «Повторить». Если не помогло — откройте бота и снова нажмите кнопку «Личный кабинет».',
       retry: 'Повторить',
+      ho_t: 'Откройте кабинет в Telegram',
+      ho_m: 'Для входа нужен ваш профиль Telegram — так кабинет видите только вы. Нажмите кнопку: кабинет откроется уже привязанным к вашему аккаунту.',
+      ho_btn: 'Открыть в Telegram',
       hello: 'Здравствуйте, {n}!',
       lic: 'Комплекты и лицензии',
       lic_fresh: 'актуальная',
@@ -1497,6 +1500,9 @@ loadTopics();
       stale_t: 'Account session expired',
       stale_m: 'Tap “Retry” first. If that does not help, open the bot and tap “My account” again.',
       retry: 'Retry',
+      ho_t: 'Open the account in Telegram',
+      ho_m: 'Sign-in requires your Telegram profile — that way the account is visible only to you. Tap the button: the account opens bound to your profile.',
+      ho_btn: 'Open in Telegram',
       hello: 'Hello, {n}!',
       lic: 'Kits and licenses',
       lic_fresh: 'up to date',
@@ -2023,6 +2029,20 @@ loadTopics();
     var r = document.getElementById('szc-retry');
     if (r) r.addEventListener('click', function (ev) { ev.preventDefault(); haptic('light'); load(); });
   }
+  function renderHandoff() {
+    /* Task 174 (репорт босса: «переслал сообщение — кнопка открыла чужой
+       кабинет»): токен из startapp больше НЕ авторизует — он bearer-ключ и
+       уезжает вместе с сообщением при пересылке. Кабинет показывает только
+       initData; без неё — честный хендофф на тот же миниапп через t.me:
+       там initData есть, /api/cabinet initData-first покажет НАЖАВШЕМУ его
+       собственный кабинет, а не владельца токена из пересланной ссылки. */
+    ov.innerHTML = '<div style="' + PAD + '">' + bar(ACC)
+      + '<div style="font-size:23px;font-weight:700">' + esc(TXT.ho_t) + '</div>'
+      + '<div style="font-size:15px;opacity:.85;margin:8px 0 16px">' + esc(TXT.ho_m) + '</div>'
+      + btn('https://t.me/oglavlenie_shop_bot/toc?startapp=' + String(window.__TOC_STARTPARAM || ''), TXT.ho_btn, true)
+      + '<div style="font-size:11px;opacity:.4;margin-top:16px;font-family:ui-monospace,Menlo,monospace">'
+      + esc('handoff · init=no · tok=' + (cabTok ? 'yes' : 'no')) + '</div></div>';
+  }
   function load() {
     ov.innerHTML = '<div style="' + PAD + 'display:flex;align-items:center;'
       + 'justify-content:center;min-height:70vh">'
@@ -2033,11 +2053,11 @@ loadTopics();
       + '@keyframes szc{to{transform:rotate(360deg)}}</style></div>';
     var init = (w && w.initData) || '';
     var diag0 = { init: init ? 1 : 0, tok: cabTok ? 1 : 0 };
+    if (!init && cabTok) { renderHandoff(); return; }
     function dthrow(http, why) {
       throw { http: http, why: why, init: diag0.init, tok: diag0.tok };
     }
-    var body = init ? { initData: init }
-      : (cabTok ? { cab_token: cabTok } : { initData: '' });
+    var body = init ? { initData: init } : { initData: '' };
     fetch(API + '/api/cabinet', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
