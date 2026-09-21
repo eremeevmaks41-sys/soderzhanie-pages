@@ -1313,6 +1313,40 @@ licenseValid(cfg.licensee, cfg.license_key).then(function(ok){
     b.textContent = 'Лицензионный ключ не подтверждён. Работает демонстрационный режим — впишите корректные данные в config.js или обратитесь к продавцу.';
   }
 });
+
+/* ── статус лицензии у продавца (Task 170): «отозвана» → заглушка; сбой сети не блокирует ── */
+(function(){
+  var LIC_API = 'https://sales-bot-private.onrender.com/lic';
+  if (!cfg.license_id) return;
+  fetch(LIC_API + '?lic_id=' + encodeURIComponent(cfg.license_id)
+        + '&licensee=' + encodeURIComponent(cfg.licensee || ''),
+        {cache: 'no-store'})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){
+      if (!j || j.status !== 'revoked') return;
+      var ov = document.createElement('div');
+      ov.setAttribute('style', 'position:fixed;left:0;top:0;right:0;bottom:0;'
+        + 'z-index:99999;background:#F3F7FD;display:flex;align-items:center;'
+        + 'justify-content:center;padding:24px');
+      ov.innerHTML = '<div style="background:#fff;border-radius:24px;'
+        + 'box-shadow:0 12px 40px rgba(42,171,238,.14);padding:40px 32px;'
+        + 'max-width:430px;text-align:center;'
+        + "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\">"
+        + '<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 18px;'
+        + 'background:linear-gradient(135deg,#2AABEE,#7C6CFF);display:flex;'
+        + 'align-items:center;justify-content:center">'
+        + '<svg width="30" height="30" viewBox="0 0 24 24" fill="none">'
+        + '<path d="M7 10V8a5 5 0 0 1 10 0v2h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V8a3 3 0 0 0-6 0v2Z" fill="#fff"/></svg></div>'
+        + '<h1 style="font-size:20px;color:#0F2437;margin:0 0 10px">Оглавление недоступно</h1>'
+        + '<p style="font-size:15px;line-height:1.55;color:#48607A;margin:0">'
+        + 'Доступ к оглавлению прекращён: лицензия отозвана.<br>'
+        + 'Для восстановления напишите в чат бота, из которого вы открыли эту страницу.</p>'
+        + '</div>';
+      document.body.appendChild(ov);
+    })
+    .catch(function(){});
+})();
+
 load();
 loadTopics();
 })();
