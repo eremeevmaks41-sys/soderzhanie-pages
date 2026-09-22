@@ -17,7 +17,7 @@ window.__TOC_DEFAULT = 'testovuj';
      перезагружает страницу с ?cbv=<ver> — URL другой, устаревший кэш мимо;
      дальше этот URL переиспользуется и честно ревалидируется по ETag.
      Один раз за сессию (sessionStorage); если cbv уже в query — молчим. */
-  var CBV = 'v65-ru';
+  var CBV = 'v66-ru';
   if (location.search.indexOf('cbv=') !== -1) return;
   try {
     var s = window.sessionStorage;
@@ -334,7 +334,7 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v65-ru</span></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v66-ru</span></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
@@ -2043,6 +2043,41 @@ loadTopics();
       + '<div style="font-size:11px;opacity:.4;margin-top:16px;font-family:ui-monospace,Menlo,monospace">'
       + esc('handoff · init=no · tok=' + (cabTok ? 'yes' : 'no')) + '</div></div>';
   }
+  /* Task 177 (репорт босса 22.9.2026: «невозможно зайти в личный кабинет —
+     кнопка зациклена», скриншот: handoff · init=no · tok=yes ВНУТРИ
+     Telegram). Причина: мост подключён async (см. <head>) и честно
+     соревнуется с инлайн-скриптом кабинета — при его опоздании initData
+     читалась пустой, и ветка «есть токен, нет initData» мгновенно рисовала
+     хендофф; тап «Открыть в Telegram» открывал ту же страницу, гонка
+     повторялась — цикл. Лечение: решение о хендоффе принимается ТОЛЬКО
+     после того, как мост доехал (или истекли 3 с) — тот же урок, что у
+     ядра витрины (adoptBridge, 12.9.2026). Приехавший мост с initData
+     просто продолжает обычную загрузку кабинета. */
+  var cabDone = false;
+  var cabDeadline = 0;
+  function cabTw() {
+    try { return (window.Telegram && window.Telegram.WebApp) || null; }
+    catch (e) { return null; }
+  }
+  function cabWaitBridge() {
+    if (!cabDeadline) cabDeadline = Date.now() + 3000;
+    var w2 = cabTw();
+    if (w2 && w2.initData && String(w2.initData).length > 0) {
+      cabDone = true; w = w2;
+      tgUser = (w.initDataUnsafe && w.initDataUnsafe.user) || {};
+      load(); return;                       /* мост опоздал, но initData приехала — обычный путь */
+    }
+    var settled = (w2 && w2.initDataUnsafe !== undefined) /* мост исполнен (фиктивный тоже) */
+      || Date.now() >= cabDeadline;
+    if (!settled) { setTimeout(cabWaitBridge, 150); return; }
+    cabDone = true;
+    if (!cabTok) { load(); return; }        /* без токена — прежний путь (401 → честный экран) */
+    if (/[?&#]tgWebApp/.test(location.href) ||
+        (w2 && w2.platform && w2.platform !== 'unknown')) {
+      load(); return;   /* мы в Telegram, но initData взять неоткуда — 401 → экран «Повторить», не цикл */
+    }
+    renderHandoff();                        /* честно вне Telegram — хендофф Task 174 */
+  }
   function load() {
     ov.innerHTML = '<div style="' + PAD + 'display:flex;align-items:center;'
       + 'justify-content:center;min-height:70vh">'
@@ -2053,7 +2088,9 @@ loadTopics();
       + '@keyframes szc{to{transform:rotate(360deg)}}</style></div>';
     var init = (w && w.initData) || '';
     var diag0 = { init: init ? 1 : 0, tok: cabTok ? 1 : 0 };
-    if (!init && cabTok) { renderHandoff(); return; }
+    if (!init && !cabDone && (cabTok || /[?&#]tgWebApp/.test(location.href))) {
+      cabWaitBridge(); return;
+    }
     function dthrow(http, why) {
       throw { http: http, why: why, init: diag0.init, tok: diag0.tok };
     }
