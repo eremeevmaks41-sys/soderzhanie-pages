@@ -17,7 +17,7 @@ window.__TOC_DEFAULT = 'testovuj';
      перезагружает страницу с ?cbv=<ver> — URL другой, устаревший кэш мимо;
      дальше этот URL переиспользуется и честно ревалидируется по ETag.
      Один раз за сессию (sessionStorage); если cbv уже в query — молчим. */
-  var CBV = 'v66-ru';
+  var CBV = 'v64-ru';
   if (location.search.indexOf('cbv=') !== -1) return;
   try {
     var s = window.sessionStorage;
@@ -334,7 +334,7 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v66-ru</span></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v64-ru</span></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
@@ -1390,7 +1390,7 @@ loadTopics();
       no_sub_t: 'Пока нет подключений',
       no_sub_m: 'Откройте бота — там можно подключить свой канал: 7 дней бесплатно, оглавление собираем мы.',
       prep_t: 'Готовим оглавление',
-      prep_m: 'Бот принят в канал, каталог собирается автоматически — обычно 5–7 минут. Наберитесь терпения: бот не завис, сообщение придёт само.',
+      prep_m: 'Бот принят в канал, каталог собирается автоматически — обычно до получаса. Сообщение придёт само.',
       trial_t: 'Пробный период',
       paid_t: 'Подписка активна',
       ended_t: 'Подписка истекла',
@@ -1402,7 +1402,6 @@ loadTopics();
       trial_hint: 'Дальше — ⭐{p}/мес. Автосписаний нет: продлевать будете только сами.',
       paid_hint: 'Автосписаний нет: следующий месяц подключается только явной оплатой.',
       open_toc: '📖 Открыть оглавление',
-      support: 'Поддержка: {s}',
       hist: 'История оплат',
       hist_empty: 'Оплаты появятся здесь после первого продления.',
       with_us: 'с нами с {d}',
@@ -1415,9 +1414,6 @@ loadTopics();
       stale_t: 'Сессия кабинета устарела',
       stale_m: 'Нажмите «Повторить». Если не помогло — откройте бота и снова нажмите кнопку «Личный кабинет».',
       retry: 'Повторить',
-      ho_t: 'Откройте кабинет в Telegram',
-      ho_m: 'Для входа нужен ваш профиль Telegram — так кабинет видите только вы. Нажмите кнопку: кабинет откроется уже привязанным к вашему аккаунту.',
-      ho_btn: 'Открыть в Telegram',
       hello: 'Здравствуйте, {n}!',
       lic: 'Комплекты и лицензии',
       lic_fresh: 'актуальная',
@@ -1475,7 +1471,7 @@ loadTopics();
       no_sub_t: 'No connections yet',
       no_sub_m: 'Open the bot to connect your channel: 7 days free, we build the table of contents for you.',
       prep_t: 'Preparing the contents',
-      prep_m: 'The bot is in the channel, the catalog is being built automatically — usually 5–7 minutes. Hang tight: the bot hasn\'t frozen, a message will arrive on its own.',
+      prep_m: 'The bot is in the channel, the catalog is being built automatically — usually under 30 minutes. A message will arrive on its own.',
       trial_t: 'Trial period',
       paid_t: 'Subscription active',
       ended_t: 'Subscription expired',
@@ -1487,7 +1483,6 @@ loadTopics();
       trial_hint: 'Then ⭐{p}/mo. No auto-charges: you only ever renew it yourself.',
       paid_hint: 'No auto-charges: the next month is added only by an explicit payment.',
       open_toc: '📖 Open the table of contents',
-      support: 'Support: {s}',
       hist: 'Payment history',
       hist_empty: 'Payments will appear here after the first renewal.',
       with_us: 'with us since {d}',
@@ -1500,9 +1495,6 @@ loadTopics();
       stale_t: 'Account session expired',
       stale_m: 'Tap “Retry” first. If that does not help, open the bot and tap “My account” again.',
       retry: 'Retry',
-      ho_t: 'Open the account in Telegram',
-      ho_m: 'Sign-in requires your Telegram profile — that way the account is visible only to you. Tap the button: the account opens bound to your profile.',
-      ho_btn: 'Open in Telegram',
       hello: 'Hello, {n}!',
       lic: 'Kits and licenses',
       lic_fresh: 'up to date',
@@ -1852,12 +1844,8 @@ loadTopics();
       + 'text-align:center;margin:10px 0;padding:13px 14px;border-radius:12px;'
       + 'background:' + CARD + ';color:inherit">' + esc(TXT.copy) + '</a>');
     b.push('<div style="font-size:13px;opacity:.55;margin-top:22px">' + esc(TXT.noauto) + '</div>');
-    if (d.support) {
-      b.push('<div style="font-size:14px;margin-top:8px">'
-        + esc(TXT.support).replace('{s}', '<a href="https://t.me/'
-          + esc(String(d.support).replace(/^@+/, '')) + '" data-ext="1" style="color:inherit;font-weight:600">'
-          + esc(d.support) + '</a>') + '</div>');
-    }
+    /* Task 189: строка «Поддержка: @…» убрана из главного таба — контакт только
+       через кнопку (вкладка «Доп. услуги»), чтобы владельцу не писали по любому поводу. */
     b.push('</div>');
     return b.join('');
   }
@@ -2029,55 +2017,6 @@ loadTopics();
     var r = document.getElementById('szc-retry');
     if (r) r.addEventListener('click', function (ev) { ev.preventDefault(); haptic('light'); load(); });
   }
-  function renderHandoff() {
-    /* Task 174 (репорт босса: «переслал сообщение — кнопка открыла чужой
-       кабинет»): токен из startapp больше НЕ авторизует — он bearer-ключ и
-       уезжает вместе с сообщением при пересылке. Кабинет показывает только
-       initData; без неё — честный хендофф на тот же миниапп через t.me:
-       там initData есть, /api/cabinet initData-first покажет НАЖАВШЕМУ его
-       собственный кабинет, а не владельца токена из пересланной ссылки. */
-    ov.innerHTML = '<div style="' + PAD + '">' + bar(ACC)
-      + '<div style="font-size:23px;font-weight:700">' + esc(TXT.ho_t) + '</div>'
-      + '<div style="font-size:15px;opacity:.85;margin:8px 0 16px">' + esc(TXT.ho_m) + '</div>'
-      + btn('https://t.me/oglavlenie_shop_bot/toc?startapp=' + String(window.__TOC_STARTPARAM || ''), TXT.ho_btn, true)
-      + '<div style="font-size:11px;opacity:.4;margin-top:16px;font-family:ui-monospace,Menlo,monospace">'
-      + esc('handoff · init=no · tok=' + (cabTok ? 'yes' : 'no')) + '</div></div>';
-  }
-  /* Task 177 (репорт босса 22.9.2026: «невозможно зайти в личный кабинет —
-     кнопка зациклена», скриншот: handoff · init=no · tok=yes ВНУТРИ
-     Telegram). Причина: мост подключён async (см. <head>) и честно
-     соревнуется с инлайн-скриптом кабинета — при его опоздании initData
-     читалась пустой, и ветка «есть токен, нет initData» мгновенно рисовала
-     хендофф; тап «Открыть в Telegram» открывал ту же страницу, гонка
-     повторялась — цикл. Лечение: решение о хендоффе принимается ТОЛЬКО
-     после того, как мост доехал (или истекли 3 с) — тот же урок, что у
-     ядра витрины (adoptBridge, 12.9.2026). Приехавший мост с initData
-     просто продолжает обычную загрузку кабинета. */
-  var cabDone = false;
-  var cabDeadline = 0;
-  function cabTw() {
-    try { return (window.Telegram && window.Telegram.WebApp) || null; }
-    catch (e) { return null; }
-  }
-  function cabWaitBridge() {
-    if (!cabDeadline) cabDeadline = Date.now() + 3000;
-    var w2 = cabTw();
-    if (w2 && w2.initData && String(w2.initData).length > 0) {
-      cabDone = true; w = w2;
-      tgUser = (w.initDataUnsafe && w.initDataUnsafe.user) || {};
-      load(); return;                       /* мост опоздал, но initData приехала — обычный путь */
-    }
-    var settled = (w2 && w2.initDataUnsafe !== undefined) /* мост исполнен (фиктивный тоже) */
-      || Date.now() >= cabDeadline;
-    if (!settled) { setTimeout(cabWaitBridge, 150); return; }
-    cabDone = true;
-    if (!cabTok) { load(); return; }        /* без токена — прежний путь (401 → честный экран) */
-    if (/[?&#]tgWebApp/.test(location.href) ||
-        (w2 && w2.platform && w2.platform !== 'unknown')) {
-      load(); return;   /* мы в Telegram, но initData взять неоткуда — 401 → экран «Повторить», не цикл */
-    }
-    renderHandoff();                        /* честно вне Telegram — хендофф Task 174 */
-  }
   function load() {
     ov.innerHTML = '<div style="' + PAD + 'display:flex;align-items:center;'
       + 'justify-content:center;min-height:70vh">'
@@ -2088,13 +2027,11 @@ loadTopics();
       + '@keyframes szc{to{transform:rotate(360deg)}}</style></div>';
     var init = (w && w.initData) || '';
     var diag0 = { init: init ? 1 : 0, tok: cabTok ? 1 : 0 };
-    if (!init && !cabDone && (cabTok || /[?&#]tgWebApp/.test(location.href))) {
-      cabWaitBridge(); return;
-    }
     function dthrow(http, why) {
       throw { http: http, why: why, init: diag0.init, tok: diag0.tok };
     }
-    var body = init ? { initData: init } : { initData: '' };
+    var body = init ? { initData: init }
+      : (cabTok ? { cab_token: cabTok } : { initData: '' });
     fetch(API + '/api/cabinet', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
