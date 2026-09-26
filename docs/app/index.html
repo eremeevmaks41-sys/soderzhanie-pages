@@ -17,7 +17,7 @@ window.__TOC_DEFAULT = 'testovuj';
      перезагружает страницу с ?cbv=<ver> — URL другой, устаревший кэш мимо;
      дальше этот URL переиспользуется и честно ревалидируется по ETag.
      Один раз за сессию (sessionStorage); если cbv уже в query — молчим. */
-  var CBV = 'v64-ru';
+  var CBV = 'v65-ru';
   if (location.search.indexOf('cbv=') !== -1) return;
   try {
     var s = window.sessionStorage;
@@ -334,7 +334,7 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v64-ru</span></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v65-ru</span></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
@@ -1465,7 +1465,17 @@ loadTopics();
       ref_adm_top: 'Топ реферреров (по оплатившим)',
       ref_adm_top_row: 'id {id} — {k} оплативших',
       ref_adm_review: 'Ждут ручного ревью',
-      ref_adm_granted_t: 'Наград выдано всего'
+      ref_adm_granted_t: 'Наград выдано всего',
+      ref_btn: '↩️ Возврат (14 дней)',
+      ref_last: 'последний день',
+      ref_left: 'осталось {n} дн.',
+      ref_sent: '✅ Заявка открыта — подтверждение ждёт в чате бота',
+      ref_err_window: '⏳ Срок возврата (14 дней) истёк.',
+      ref_err_already: 'Этот платёж уже возвращён.',
+      ref_err_premium: '👑 По этой покупке возврат оформляет владелец лично.',
+      ref_err_stale: 'Кнопка устарела — обновите кабинет.',
+      ref_err_auth: 'Сессия устарела — откройте кабинет заново из бота.',
+      ref_err_server: 'Не получилось — попробуйте ещё раз чуть позже.'
     },
     en: {
       no_sub_t: 'No connections yet',
@@ -1546,7 +1556,17 @@ loadTopics();
       ref_adm_top: 'Top referrers (by paid)',
       ref_adm_top_row: 'id {id} — {k} paid',
       ref_adm_review: 'Awaiting manual review',
-      ref_adm_granted_t: 'Total rewards granted'
+      ref_adm_granted_t: 'Total rewards granted',
+      ref_btn: '↩️ Refund (14 days)',
+      ref_last: 'last day',
+      ref_left: '{n} d left',
+      ref_sent: '✅ Request opened — the confirmation is waiting in the bot chat',
+      ref_err_window: '⏳ The 14-day refund window has passed.',
+      ref_err_already: 'This payment has already been refunded.',
+      ref_err_premium: '👑 Refunds for this purchase are handled by the owner personally.',
+      ref_err_stale: 'This button is stale — refresh the account screen.',
+      ref_err_auth: 'Session expired — reopen the account from the bot.',
+      ref_err_server: 'Didn’t work — please try again shortly.'
     }
   })[L];
   function esc(s) {
@@ -1603,6 +1623,23 @@ loadTopics();
   function bar(tone) {
     return '<div style="width:44px;height:5px;border-radius:3px;background:' + tone
       + ';margin:2px 0 14px"></div>';
+  }
+  /* Task 191: кнопка «↩️ Возврат» у покупки в окне 14 дней («нет кнопки —
+     нет возврата»). Сервер сам решает, показывать ли кнопку (payload отдаёт
+     refund только живым покупкам в окне); нажатие → POST /api/refund_request,
+     бот заново определяет статус покупки по журналу и открывает СУЩЕСТВУЮЩИЙ
+     флоу (подтверждение в чате → диагностика → решение владельца). */
+  function rfHint(rf) {
+    var d = (rf && rf.days_left) || 0;
+    return d > 0 ? TXT.ref_left.replace('{n}', String(d)) : TXT.ref_last;
+  }
+  function refBtnHtml(rf, inner) {
+    return '<a href="#" data-rf="' + esc(String(rf.token)) + '" style="display:block;'
+      + 'text-decoration:none;text-align:center;margin:' + (inner ? '8px 0 2px' : '10px 0 2px')
+      + ';padding:' + (inner ? '9px 12px' : '11px 14px') + ';border-radius:' + (inner ? '10px' : '12px')
+      + ';background:' + CARD + ';color:inherit;font-size:' + (inner ? '13.5px' : '14px')
+      + ';box-shadow:inset 0 0 0 1px ' + LINE + '">'
+      + esc(TXT.ref_btn) + ' · ' + esc(rfHint(rf)) + '</a>';
   }
   /* Task 130: тост — короткое подтверждение внизу экрана (копирование). */
   function toast(msg) {
@@ -1813,6 +1850,9 @@ loadTopics();
       } else {
         b.push('<div style="font-size:14px;opacity:.6">' + esc(TXT.hist_empty) + '</div>');
       }
+      /* Task 191: возврат последнего подписочного платежа — кнопка под историей
+         оплат; видна только пока платёж в окне 14 дней (решает сервер). */
+      if (sub.refund && sub.refund.token) b.push(refBtnHtml(sub.refund, false));
     }
     /* Task 130: лицензии продуктовой ветки — те же данные, что «Проверить
        свою лицензию» в боте; без лицензий блок не показывается вовсе. */
@@ -1822,6 +1862,7 @@ loadTopics();
         + esc(TXT.lic) + '</div>');
       for (var k = 0; k < licItems.length; k++) {
         var it = licItems[k];
+        var rfHtml = it.refund ? refBtnHtml(it.refund, true) : '';
         b.push('<div style="padding:9px 0;border-bottom:1px solid ' + LINE + ';font-size:14px">'
           + '<div>' + esc(it.tier) + '</div>'
           + '<div style="opacity:.75;margin-top:2px">№ ' + esc(it.lic_id)
@@ -1830,7 +1871,7 @@ loadTopics();
           + (it.fresh ? (dark ? '#34D399' : '#15803D') : ACC) + '">'
           + esc(it.fresh ? TXT.lic_fresh
             : TXT.lic_upd.replace('{v}', String((d.lic && d.lic.cur) || '')))
-          + '</div></div>');
+          + '</div>' + rfHtml + '</div>');
       }
     }
     /* Task 147: блок «Партнёрка» переехал в отдельную вкладку (refBody) —
@@ -2066,6 +2107,62 @@ loadTopics();
       w.openTelegramLink(href);
     }
   });
+  /* Task 191: нажатие кнопки «↩️ Возврат» — POST /api/refund_request с той же
+     аутентификацией, что у кабинета (initData / cab_token). Успех → тост,
+     гашение всех кнопок возврата и возврат в чат бота (WebApp.close()) — там
+     уже ждёт подтверждение. Ошибка → тост с честной причиной. */
+  ov.addEventListener('click', function (ev) {
+    var t = ev.target;
+    while (t && t !== ov && !(t.tagName === 'A' && t.getAttribute('data-rf'))) {
+      t = t.parentNode;
+    }
+    if (!t || t === ov) return;
+    ev.preventDefault();
+    requestRefund(t.getAttribute('data-rf'), t);
+  });
+  function rfBody(token) {
+    var init = (w && w.initData) || '';
+    return init ? { initData: init, token: token }
+      : (cabTok ? { cab_token: cabTok, token: token } : { initData: '', token: token });
+  }
+  function rfWhy(why) {
+    return TXT['ref_err_' + (why || 'server')] || TXT.ref_err_server;
+  }
+  function rfFail(el, msg) {
+    if (el) el.removeAttribute('data-busy');
+    toast(msg);
+  }
+  function rfDone() {
+    var all = ov.querySelectorAll('[data-rf]');
+    for (var i = 0; i < all.length; i++) {
+      all[i].removeAttribute('data-rf');
+      all[i].removeAttribute('data-busy');
+      all[i].style.opacity = '.45';
+    }
+    toast(TXT.ref_sent);
+    /* Кабинет открыт из чата бота — закрываем мини-апп, чтобы подтверждение
+       («Проверить и вернуть») было прямо перед глазами. */
+    setTimeout(function () { try { if (w && w.close) w.close(); } catch (e) {} }, 1600);
+  }
+  function requestRefund(token, el) {
+    if (!token || !el || el.getAttribute('data-busy') === '1') return;
+    el.setAttribute('data-busy', '1');
+    haptic('light');
+    fetch(API + '/api/refund_request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rfBody(token))
+    }).then(function (r) {
+      return r.json().catch(function () { return null; }).then(function (j) {
+        return { http: r.status, j: j };
+      });
+    }).then(function (res) {
+      var j = res.j || {};
+      if (res.http === 401) { rfFail(el, TXT.ref_err_auth); return; }
+      if (res.http >= 500 || !('ok' in j)) { rfFail(el, TXT.ref_err_server); return; }
+      if (j.ok) rfDone(); else rfFail(el, rfWhy(j.why));
+    }).catch(function () { rfFail(el, TXT.ref_err_server); });
+  }
   load();
 })();
 </script>
