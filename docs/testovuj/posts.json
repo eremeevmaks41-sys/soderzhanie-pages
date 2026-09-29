@@ -1,11 +1,22 @@
 {
   "version": 1,
-  "updated_at": "2026-09-26T13:15:54+03:00",
+  "updated_at": "2026-09-29T10:28:44+03:00",
   "channel": {
     "name": "DemoTest",
     "url": "https://t.me/Testovuj"
   },
   "posts": [
+    {
+      "id": 525,
+      "date": "2026-09-29",
+      "time": "10:28",
+      "title": "📎 Файл",
+      "preview": "",
+      "tags": [],
+      "kind": "document",
+      "url": "https://t.me/Testovuj/525",
+      "src": ""
+    },
     {
       "id": 524,
       "date": "2026-09-26",
