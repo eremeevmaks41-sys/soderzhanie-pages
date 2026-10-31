@@ -459,6 +459,21 @@ if (!window.SZ_CONFIG && !window.__TOC_CABINET) {
 var SALT = 'SODERZHANIE-v1-7f3a';               // служебная соль лицензии
 var PAGE_SIZE = 100;                            // карточек за одну подгрузку
 var cfg = window.SZ_CONFIG || {};
+/* ── Счётчик открытий «Оглавления» (v1.7.28): 1×1-пиксель на наш бэкенд.
+   Без внешних сервисов и личных данных: id браузера случайный, живёт в
+   localStorage; в лог уходит только его хэш. Молчит, если beacon не задан
+   (старые config.js) или канал не определился. ── */
+try { (function(){
+  if (!cfg || !cfg.beacon || !cfg.channel_url) return;
+  var m = String(cfg.channel_url).match(/t\.me\/([A-Za-z0-9_]+)/); if (!m) return;
+  var v = null;
+  try { v = localStorage.getItem('szvid'); } catch (e) {}
+  if (!v) { v = Math.random().toString(36).slice(2) + Date.now().toString(36);
+            try { localStorage.setItem('szvid', v); } catch (e) {} }
+  new Image().src = String(cfg.beacon).replace(/\/+$/, '') + '/open?ch=' +
+    encodeURIComponent(m[1]) + '&v=' + encodeURIComponent(v) + '&t=' + Date.now();
+})(); } catch (e) {}
+
 
 /* ── Telegram WebApp: тема и открытие ссылок ──
    Официальный скрипт (см. <head>) создаёт window.Telegram.WebApp и ВНЕ
@@ -767,11 +782,18 @@ function hex(buf){
 }
 function licenseValid(licensee, key){
   if (!licensee || !key) return Promise.resolve(false);
-  var data = new TextEncoder().encode(String(licensee).trim().toLowerCase() + '|' + SALT);
   if (!(window.crypto && crypto.subtle)) return Promise.resolve(false); // file:// — просто показываем баннер
-  return crypto.subtle.digest('SHA-256', data).then(function(d){
-    return ('SZ-' + hex(d).slice(0,16)).toUpperCase() === String(key).trim().toUpperCase();
-  });
+  /* Соль-паритет (v1.7.31, кейс testovuj 1.11.2026): EN-сборка + мини-апп-шелл
+     давали «демонстрационный режим» на валидной лицензии — в шелле одна соль,
+     в EN-движке другая. Ключ валиден, если совпал с ЛЮБОЙ из солей продукта;
+     алгоритм и префикс не менялись, старые ключи остаются ключами. */
+  var k = String(key).trim().toUpperCase();
+  return Promise.all(['SODERZHANIE-v1-7f3a', 'SODERZHANIE-EN-v1-4k8t'].map(function(salt){
+    var data = new TextEncoder().encode(String(licensee).trim().toLowerCase() + '|' + salt);
+    return crypto.subtle.digest('SHA-256', data).then(function(d){
+      return ('SZ-' + hex(d).slice(0,16)).toUpperCase() === k;
+    });
+  })).then(function(rs){ return rs.indexOf(true) !== -1; });
 }
 
 /* ── утилиты ── */
