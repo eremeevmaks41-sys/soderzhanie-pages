@@ -273,6 +273,21 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
 var SALT = 'SODERZHANIE-v1-7f3a';               // служебная соль лицензии
 var PAGE_SIZE = 100;                            // карточек за одну подгрузку
 var cfg = window.SZ_CONFIG || {};
+/* ── Счётчик открытий «Оглавления» (v1.7.28): 1×1-пиксель на наш бэкенд.
+   Без внешних сервисов и личных данных: id браузера случайный, живёт в
+   localStorage; в лог уходит только его хэш. Молчит, если beacon не задан
+   (старые config.js) или канал не определился. ── */
+try { (function(){
+  if (!cfg || !cfg.beacon || !cfg.channel_url) return;
+  var m = String(cfg.channel_url).match(/t\.me\/([A-Za-z0-9_]+)/); if (!m) return;
+  var v = null;
+  try { v = localStorage.getItem('szvid'); } catch (e) {}
+  if (!v) { v = Math.random().toString(36).slice(2) + Date.now().toString(36);
+            try { localStorage.setItem('szvid', v); } catch (e) {} }
+  new Image().src = String(cfg.beacon).replace(/\/+$/, '') + '/open?ch=' +
+    encodeURIComponent(m[1]) + '&v=' + encodeURIComponent(v) + '&t=' + Date.now();
+})(); } catch (e) {}
+
 
 /* ── Telegram WebApp: тема и открытие ссылок ──
    Официальный скрипт (см. <head>) создаёт window.Telegram.WebApp и ВНЕ
