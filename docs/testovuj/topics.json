@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "_note": "Topics were built by AI tagging of posts (automatic tag rework). Edit freely: same file format, a topic's «tags» lists synonyms.",
+  "topics": [
+    {
+      "id": "отчтениякпреображению",
+      "title": "Отчтениякпреображению",
+      "icon": "📚",
+      "tags": [
+        "отчтениякпреображению"
+      ]
+    },
+    {
+      "id": "reading",
+      "title": "Reading",
+      "icon": "📚",
+      "tags": [
+        "reading"
+      ]
+    },
+    {
+      "id": "otch",
+      "title": "Otch",
+      "icon": "🏷",
+      "tags": [
+        "otch"
+      ]
+    },
+    {
+      "id": "теодицея",
+      "title": "Теодицея",
+      "icon": "🏷",
+      "tags": [
+        "теодицея"
+      ]
+    },
+    {
+      "id": "reflection",
+      "title": "Reflection",
+      "icon": "🏷",
+      "tags": [
+        "reflection"
+      ]
+    },
+    {
+      "id": "книги",
+      "title": "Книги",
+      "icon": "📚",
+      "tags": [
+        "книги"
+      ]
+    },
+    {
+      "id": "teodicea",
+      "title": "Teodicea",
+      "icon": "🏷",
+      "tags": [
+        "teodicea"
+      ]
+    },
+    {
+      "id": "размышления",
+      "title": "Размышления",
+      "icon": "🧠",
+      "tags": [
+        "размышления"
+      ]
+    }
+  ]
+}
