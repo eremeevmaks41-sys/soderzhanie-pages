@@ -17,7 +17,7 @@ window.__TOC_DEFAULT = 'testovuj';
      перезагружает страницу с ?cbv=<ver> — URL другой, устаревший кэш мимо;
      дальше этот URL переиспользуется и честно ревалидируется по ETag.
      Один раз за сессию (sessionStorage); если cbv уже в query — молчим. */
-  var CBV = 'v68-ru';
+  var CBV = 'v69';   /* общий ключ кэша обоих шеллов (ru/en): бамп двумя файлами разом */
   if (location.search.indexOf('cbv=') !== -1) return;
   try {
     var s = window.sessionStorage;
@@ -81,6 +81,37 @@ if (__cabCh === '_cab' || __cabCh.indexOf('_cab_') === 0) {
     } catch (e) {}
   })();
 }
+</script>
+
+<script>
+/* SZ-LANG prelude (v1.7.31, босс 1.11.2026: «выбрал английскую ветку —
+   миниапп собрался на русском»): шелл ОДИН на всех клиентов, а язык издания
+   у тенантов разный — теперь он едет в config.js тенанта (поле lang, пишет
+   trialbuild.tenant_config_js). Русский шелл, увидев lang:"en", сам
+   переходит на английскую копию шелла (app-en) — интерфейс, меню, месяцы,
+   гард-карточки: всё на языке издания. Обратно — так же (EN-шелл видит
+   lang:"ru" или поле без "en" → возвращает сюда). Кабинет в редиректе не
+   участвует: он сам выбирает язык (TXT ru/en, ?cablang/язык аккаунта).
+   Петля невозможна: оба шелла читают ОДИН и тот же config.js. Без ответа
+   (папки нет, сеть) молчим — гард ниже покажет честный экран. */
+(function () {
+  var PAGES = 'https://eremeevmaks41-sys.github.io/soderzhanie-pages/';
+  var OTHER = PAGES + 'app-en/index.html';
+  function go() {
+    try { location.replace(OTHER + location.search + location.hash); } catch (e) {}
+  }
+  try {
+    if (window.__TOC_CABINET) return;   // кабинет сам выбирает язык (TXT ru/en)
+    var ch = String(window.__TOC_CHANNEL || '').toLowerCase();
+    if (!ch || !/^[a-z0-9_]{3,64}$/.test(ch)) return;   // без папки — демо/гард
+    fetch(PAGES + ch + '/config.js', {cache: 'no-store'})
+      .then(function (r) { return r.ok ? r.text() : ''; })
+      .then(function (s) {
+        if (/\blang\s*:\s*["']en["']/.test(s || '')) go();
+      })
+      .catch(function () {});
+  } catch (e) {}
+})();
 </script>
 
 <meta charset="utf-8">
@@ -336,7 +367,7 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v68-ru</span></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v69-ru</span></div>
     <div class="us">Такой же каталог для своего канала: <a id="footBot" href="https://t.me/oglavlenie_shop_bot" target="_blank" rel="noopener">🤖 бот «Оглавление»</a> · <a id="footSite" href="https://eremeevmaks41-sys.github.io/oglavlenie/" target="_blank" rel="noopener">🌐 сайт</a></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>

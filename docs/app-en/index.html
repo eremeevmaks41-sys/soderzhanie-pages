@@ -1,0 +1,2357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+/* SZ-APP-SHELL v1 (Task 116/117) — один мини-апп на всех клиентов подписочной ветки.
+   Telegram запускает мини-апп с параметром startapp=<канал>; до загрузки
+   config.js/posts.json подставляем <base> на папку тенанта — дальше шаблон
+   работает как обычно, у каждого клиента своя страница. Слаг канала жёстко
+   фильтруется: a-z0-9_, 3–64 символа. Без параметра (t.me «Open app»,
+   меню-кнопка) показываем демо-канал (Task 117).
+   Пересборка: scripts/build_app_shell.py */
+window.__TOC_DEFAULT = 'testovuj';
+(function () {
+  /* Task 162: самолечение кэша WebView. GitHub Pages держит max-age=600,
+     а WebView Telegram отдавал старый HTML и после деплоя (репорт босса:
+     «проблема осталась» при живом фиксе). Первая загрузка новой версии
+     перезагружает страницу с ?cbv=<ver> — URL другой, устаревший кэш мимо;
+     дальше этот URL переиспользуется и честно ревалидируется по ETag.
+     Один раз за сессию (sessionStorage); если cbv уже в query — молчим. */
+  var CBV = 'v69';   /* общий ключ кэша обоих шеллов (ru/en): бамп двумя файлами разом */
+  if (location.search.indexOf('cbv=') !== -1) return;
+  try {
+    var s = window.sessionStorage;
+    if (s && s.getItem('szShellV') === CBV) return;
+    if (s) s.setItem('szShellV', CBV);
+  } catch (e) {}
+  try {
+    location.replace(location.pathname + location.search
+      + (location.search ? '&' : '?') + 'cbv=' + CBV
+      + (location.hash || ''));
+  } catch (e) {}
+})();
+(function () {
+  function sp() {
+    try {
+      var q = new URLSearchParams(location.search);
+      var p = q.get('tgWebAppStartParam') || q.get('startapp');
+      if (p) return p;
+      var h = location.hash.match(/(?:tgWebAppStartParam|startapp)=([^&]+)/);
+      if (h) return decodeURIComponent(h[1]);
+      var w = window.Telegram && window.Telegram.WebApp;
+      if (w && w.initDataUnsafe && w.initDataUnsafe.start_param) {
+        return w.initDataUnsafe.start_param;
+      }
+    } catch (e) {}
+    return '';
+  }
+  /* Task 132: сырой параметр сохраняется — из него кабинет берёт токен
+     (_cab_<uid>_<exp>_<sig>), когда мост Telegram недоступен (initData пуст). */
+  window.__TOC_STARTPARAM = String(sp() || '');
+  var ch = window.__TOC_STARTPARAM.toLowerCase().replace(/[^a-z0-9_]/g, '');
+  if (!ch) ch = String(window.__TOC_DEFAULT || '').toLowerCase().replace(/[^a-z0-9_]/g, '');
+  window.__TOC_CHANNEL = ch;
+  if (ch.length >= 3 && ch.length <= 64) {
+    var b = document.createElement('base');
+    b.href = 'https://eremeevmaks41-sys.github.io/soderzhanie-pages/' + ch + '/';
+    document.head.appendChild(b);
+  }
+})();
+</script>
+
+<script>
+/* SZ-CAB prelude (Task 129): startapp=_cab — режим личного кабинета.
+   Каналы Telegram не начинаются с «_», поэтому конфликт с папками тенантов
+   невозможен. Task 132: кабинет распознаётся и по префиксу _cab_ — так в
+   startapp приезжает подписанный токен пользователя для контекстов без
+   initData (браузерный фолбэк Direct-Link). <base> в кабинете НЕ ставится:
+   витринные config.js/posts.json не грузятся (гарант ниже в этом режиме
+   молчит), а витринный DOM прячем стилем заранее — до запуска ядра и
+   кабинета. */
+var __cabCh = String(window.__TOC_CHANNEL || '');
+if (__cabCh === '_cab' || __cabCh.indexOf('_cab_') === 0) {
+  window.__TOC_CABINET = true;
+  (function () {
+    try {
+      var st = document.createElement('style');
+      st.id = 'sz-cab-hide';
+      st.textContent = '.wrap,header,.banner{display:none!important}'
+        + '#sz-cab a{overflow-wrap:anywhere;word-break:break-word}';
+      (document.head || document.documentElement).appendChild(st);
+    } catch (e) {}
+  })();
+}
+</script>
+
+<script>
+/* SZ-LANG prelude (EN copy, v1.7.31): обратная сторона английского шелла.
+   Тенант с lang:"ru" (или старый config.js без поля) отсюда возвращается
+   в русский шелл (app); EN-тенант остаётся. Кабинет в редиректе не
+   участвует: он сам выбирает язык (TXT ru/en, ?cablang/язык аккаунта).
+   Петля невозможна: оба шелла читают один и тот же config.js. */
+(function () {
+  var PAGES = 'https://eremeevmaks41-sys.github.io/soderzhanie-pages/';
+  var OTHER = PAGES + 'app/index.html';
+  function go() {
+    try { location.replace(OTHER + location.search + location.hash); } catch (e) {}
+  }
+  try {
+    if (window.__TOC_CABINET) return;   // кабинет сам выбирает язык (TXT ru/en)
+    var ch = String(window.__TOC_CHANNEL || '').toLowerCase();
+    if (!ch || !/^[a-z0-9_]{3,64}$/.test(ch)) return;   // без папки — демо/гард
+    fetch(PAGES + ch + '/config.js', {cache: 'no-store'})
+      .then(function (r) { return r.ok ? r.text() : ''; })
+      .then(function (s) {
+        if (!/\blang\s*:\s*["']en["']/.test(s || '')) go();
+      })
+      .catch(function () {});
+  } catch (e) {}
+})();</script>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F3F7FD">
+<title>Contents</title>
+<!-- ═════════════════════════════════════════════════════════════════
+     «Оглавление телеграм-канала» · мини-апп
+     Одна страница, без внешних зависимостей. Хостинг: GitHub Pages.
+     Данные: docs/posts.json (обновляется автоматически Actions).
+     Настройки: docs/config.js  (канал, цвет, лицензия).
+     ═════════════════════════════════════════════════════════════════ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F7FD; --card:#FFFFFF; --card2:#F0F6FE; --text:#0D1B2E; --muted:#5F6F88;
+  --accent:#0E68A8; --accent-soft:rgba(42,171,238,.10); --chip:#EDF3FB;
+  --chip-active:linear-gradient(135deg,#2AABEE 0%,#7C6CFF 100%);
+  --chip-active-text:#FFFFFF; --line:#DCE6F3; --search:#FFFFFF;
+  --shadow:0 1px 2px rgba(23,68,130,.06),0 8px 22px rgba(23,68,130,.09);
+}
+:root[data-theme="dark"],html[data-theme="dark"]{
+  --bg:#0E1624; --card:#16202F; --card2:#1D2939; --text:#E9EFF9; --muted:#93A3BC;
+  --accent:#6FD0FF; --accent-soft:rgba(42,171,238,.16); --chip:#1D2939;
+  --chip-active:linear-gradient(135deg,#2AABEE 0%,#7C6CFF 100%);
+  --chip-active-text:#FFFFFF; --line:#263449; --search:#16202F;
+  --shadow:0 2px 12px rgba(0,0,0,.38);
+}
+*{box-sizing:border-box;margin:0;padding:0;touch-action:manipulation}
+html,body{height:100%}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  font-size:15px; line-height:1.45;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{max-width:640px;margin:0 auto;padding:14px 14px calc(30px + env(safe-area-inset-bottom))}
+
+/* ── шапка ── */
+header{display:flex;align-items:center;gap:12px;padding:10px 2px 14px}
+.logo{
+  width:46px;height:46px;border-radius:14px;flex:0 0 auto;
+  background:var(--accent-soft);display:flex;align-items:center;justify-content:center;
+  font-size:24px;user-select:none;
+}
+.h-name{font-size:19px;font-weight:700;letter-spacing:.1px}
+.h-sub{font-size:12.5px;color:var(--muted);margin-top:1px}
+.h-share{
+  margin-left:auto;flex:0 0 auto;width:36px;height:36px;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  border:1.5px solid var(--line);background:transparent;color:var(--accent);
+  border-radius:11px;font-size:16px;line-height:1;cursor:pointer;
+  user-select:none;-webkit-user-select:none;
+  transition:background .12s ease, transform .12s ease;
+}
+.h-share:active{background:var(--accent-soft);transform:scale(.94)}
+.h-open{
+  flex:0 0 auto;text-decoration:none;font-size:13px;font-weight:600;
+  color:var(--accent);border:1.5px solid var(--accent);border-radius:11px;padding:7px 12px;
+  user-select:none;-webkit-user-select:none;
+  transition:background .12s ease, transform .12s ease;
+}
+.h-open:active{background:var(--accent-soft);transform:scale(.96)}
+
+/* ── поиск ── */
+.search{position:relative;margin-bottom:10px}
+.search input{
+  width:100%;padding:11px 38px 11px 38px;border-radius:13px;border:1.5px solid var(--line);
+  background:var(--search);color:var(--text);font-size:15px;outline:none;
+}
+.search input:focus{border-color:var(--accent)}
+/* iOS рисует свой крестик для type=search — прячем: у нас свой */
+.search input{-webkit-appearance:none;appearance:none}
+.search input::-webkit-search-cancel-button,
+.search input::-webkit-search-decoration{-webkit-appearance:none;display:none}
+.search .ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.55;font-size:15px}
+.search .clr{
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  border:0;background:transparent;color:var(--muted);font-size:17px;padding:6px 8px;cursor:pointer;display:none;
+  transition:color .12s ease, transform .12s ease;
+}
+.search .clr:active{color:var(--accent);transform:translateY(-50%) scale(.88)}
+
+/* ── темы (чипсы) ── */
+.chips{
+  display:flex;gap:7px;overflow-x:auto;padding:2px 2px 12px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.chips::-webkit-scrollbar{display:none}
+.chip{
+  flex:0 0 auto;border:1.5px solid var(--line);background:var(--chip);color:var(--text);
+  border-radius:999px;padding:6px 13px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;
+  user-select:none;-webkit-user-select:none;
+  transition:transform .12s ease, border-color .12s ease, color .12s ease, background .12s ease;
+}
+.chip:active{transform:scale(.93)}
+.chip.active{background:var(--chip-active);color:var(--chip-active-text);border-color:var(--chip-active)}
+
+/* ── даты и карточки ── */
+.day{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:16px 2px 8px}
+.card{
+  display:block;color:inherit;text-decoration:none; /* карточка — настоящая ссылка <a> */
+  background:var(--card);border:1px solid var(--line);border-radius:15px;
+  padding:12px 14px;margin-bottom:9px;box-shadow:var(--shadow);cursor:pointer;
+  transition:background .12s ease, transform .12s ease;
+}
+.card:active,.card.pressed{background:var(--card2);transform:scale(.985)}
+.c-top{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
+.c-time{font-size:12px;color:var(--muted);flex:0 0 auto}
+.c-title{font-size:15.5px;font-weight:700;line-height:1.35}
+.c-prev{font-size:13.8px;color:var(--muted);margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.c-tags{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px}
+.c-tag{font-size:11.5px;color:var(--accent);background:var(--accent-soft);border-radius:7px;padding:2.5px 8px;font-weight:600}
+/* ── длинные ссылки не ломают сетку (Task 124, репорт босса 15.9.2026:
+   посты-«голые ссылки» раздували Ленту шире экрана на телефоне) ── */
+html,body{overflow-x:hidden}
+header>div{min-width:0}
+.c-title,.c-prev,.c-tag,.t-title,.h-name{min-width:0;overflow-wrap:anywhere;word-break:break-word}
+
+/* ── переключатель вида: Оглавление / Лента ── */
+.views{display:flex;background:var(--chip);border:1.5px solid var(--line);border-radius:12px;padding:3px;margin-bottom:11px}
+.views button{
+  flex:1;border:0;background:transparent;color:var(--muted);
+  font-size:13.5px;font-weight:700;padding:8px 0;border-radius:9px;cursor:pointer;
+  user-select:none;-webkit-user-select:none;
+  transition:color .12s ease, background .12s ease;
+}
+.views button:active{color:var(--text)}
+.views button.active{background:var(--chip-active);color:var(--chip-active-text)}
+
+/* ── сетка карточек (корень оглавления и разделы) ── */
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:4px}
+.tcard{
+  background:var(--card);border:1px solid var(--line);border-radius:15px;
+  padding:14px;cursor:pointer;box-shadow:var(--shadow);
+  user-select:none;-webkit-user-select:none;
+  transition:background .12s ease, transform .12s ease;
+}
+.tcard:active{background:var(--card2);transform:scale(.96)}
+.t-ico{font-size:25px;line-height:1}
+.t-title{font-size:14.5px;font-weight:700;margin-top:7px;line-height:1.3}
+.t-n{font-size:12px;color:var(--muted);margin-top:3px}
+.slabel{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:15px 2px 9px}
+.tagwrap{display:flex;flex-wrap:wrap;gap:7px;margin:2px 2px 8px}
+.back{
+  display:block;width:100%;margin:2px 0 10px;padding:10px;border-radius:12px;
+  border:1.5px solid var(--line);background:var(--chip);color:var(--text);
+  font-size:13.5px;font-weight:700;cursor:pointer;text-align:center;
+  user-select:none;-webkit-user-select:none;
+  transition:background .12s ease, transform .12s ease;
+}
+.back:active{background:var(--accent-soft);transform:scale(.98)}
+
+
+/* ── состояния ── */
+.more{
+  display:block;width:100%;margin:14px 0 4px;padding:12px;border-radius:13px;
+  border:1.5px dashed var(--accent);background:transparent;color:var(--accent);
+  font-size:14.5px;font-weight:700;cursor:pointer;
+  user-select:none;-webkit-user-select:none;
+  transition:background .12s ease, transform .12s ease;
+}
+.more:active{background:var(--accent-soft);transform:scale(.98)}
+.state{padding:46px 20px;text-align:center;color:var(--muted)}
+.state .big{font-size:40px;margin-bottom:10px}
+.state .t{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px}
+.banner{
+  display:none;background:#fdeaea;color:#8a2020;border:1px solid #f2c4c4;border-radius:12px;
+  padding:10px 13px;font-size:13px;margin-bottom:10px;
+}
+html[data-theme="dark"] .banner{background:#3a2424;color:#e8b0b0;border-color:#5a3434}
+.banner a{color:inherit;font-weight:700;text-decoration:underline}
+
+/* ── футер (водяной знак) ── */
+footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:12px;line-height:1.7}
+footer b{color:var(--text);font-weight:600}
+footer .lic{font-size:11px;opacity:.75}
+footer .us{margin-top:2px}
+footer .us a{color:inherit;font-weight:600;text-decoration:underline}
+
+/* ═══ v57: бренд-стиль лендинга oglavlenie (градиенты #2AABEE→#7C6CFF, Unbounded/Manrope) ═══ */
+.logo{background:linear-gradient(135deg,#2AABEE 0%,#7C6CFF 100%);box-shadow:0 6px 18px rgba(42,171,238,.32)}
+.h-name{font-family:'Unbounded','Manrope',sans-serif;font-size:17px;font-weight:700}
+.h-open{background:linear-gradient(135deg,#2AABEE 0%,#7C6CFF 100%);color:#fff;border:1.5px solid transparent;
+  box-shadow:0 6px 18px rgba(42,171,238,.30);font-weight:800}
+.h-open:active{opacity:.9;transform:scale(.96)}
+.search input{border-color:#D8E2F0;box-shadow:0 1px 2px rgba(23,68,130,.05)}
+html[data-theme="dark"] .search input{box-shadow:none}
+.search input:focus{border-color:#2AABEE;box-shadow:0 0 0 3px rgba(42,171,238,.14)}
+.chip{background:var(--accent-soft);border-color:rgba(42,171,238,.28);color:var(--accent);font-weight:700}
+.chip.active{border-color:transparent;box-shadow:0 4px 14px rgba(42,171,238,.35)}
+.day{color:var(--accent);font-weight:800;letter-spacing:.9px}
+.card{border-radius:16px}
+.c-tag{border-radius:8px;font-weight:700}
+.views{background:var(--accent-soft);border:1.5px solid rgba(42,171,238,.22)}
+html[data-theme="dark"] .views{background:#16202F;border-color:#263449}
+.views button{font-weight:800}
+.views button.active{box-shadow:0 4px 14px rgba(42,171,238,.30)}
+.tcard{border-radius:16px}
+.slabel{color:var(--accent)}
+.back{background:var(--card);color:var(--accent);font-weight:800}
+html[data-theme="dark"] .back{background:#16202F}
+.more{background:var(--accent-soft);border-color:rgba(42,171,238,.40);color:var(--accent)}
+html[data-theme="dark"] .more{border-color:rgba(111,208,255,.45)}
+.state .t{font-family:'Unbounded','Manrope',sans-serif}
+.banner{background:#FDEEF0;color:#B3264C;border-color:#F4CDD4}
+html[data-theme="dark"] .banner{background:#3A2530;color:#F0B6C6;border-color:#5C3644}
+footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
+</style>
+<!-- ═══ МОСТ TELEGRAM — официальный и ОБЯЗАТЕЛЬНЫЙ (async) ═══
+     core.telegram.org/bots/webapps → «Initializing Mini Apps»: скрипт
+     telegram-web-app.js подключается в <head>. Без него
+     window.Telegram.WebApp не создаётся у части клиентов (iPhone и др.) —
+     тап по карточке поста молча ничего не открывает. Ровно это было
+     причиной «не тапаются карточки поста» (12.9.2026).
+     АТРИБУТ async (кейс босса «открывалось быстрее»): страница НЕ ждёт
+     скрипт с telegram.org и рисуется мгновенно, мост доезжает параллельно;
+     ядро ниже само подхватывает его готовность (adoptBridge + подписка
+     load/error + страховочный таймер). ═══ -->
+<script async src="https://telegram.org/js/telegram-web-app.js?63"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo" id="logo">📖</div>
+    <div>
+      <div class="h-name" id="hName">Contents</div>
+      <div class="h-sub" id="hSub">A catalog of the channel’s posts</div>
+    </div>
+    <button class="h-share" id="hShare" type="button" aria-label="Copy table of contents link" title="Copy link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+    </button>
+    <a class="h-open" id="hOpen" href="#">Channel</a>
+  </header>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="search">
+    <span class="ico">🔍</span>
+    <input id="q" type="search" placeholder="Search the contents…" autocomplete="off">
+    <button class="clr" id="clr" aria-label="Clear">✕</button>
+  </div>
+
+  <div class="views" id="views" style="display:none">
+    <button id="vToc" type="button">📖 Contents</button>
+    <button id="vFeed" type="button">🕘 Feed</button>
+  </div>
+
+  <div class="chips" id="chips"></div>
+  <div id="list"></div>
+  <div id="state" class="state" style="display:none"></div>
+
+  <footer>
+    <div><b>Contents</b> · a catalog of a Telegram channel’s posts · <span id="ver">v69-en</span></div>
+    <div class="us">Get the same catalog for your channel: <a id="footBot" href="https://t.me/oglavlenie_shop_bot" target="_blank" rel="noopener">🤖 bot</a> · <a id="footSite" href="https://eremeevmaks41-sys.github.io/oglavlenie/" target="_blank" rel="noopener">🌐 site</a></div>
+    <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
+  </footer>
+</div>
+
+<script src="config.js"></script>
+<script>
+/* SZ-APP-SHELL guard (Task 119): config.js не доехал (папки канала нет) —
+   честный экран. Проверяем РОВНО тот глобал, который пишет генератор config.js
+   (trialbuild.py → window.SZ_CONFIG; раньше проверялся выдуманный
+   SODERZHANIE_CONFIG — гарант срабатывал на КАЖДОМ открытии мини-аппа).
+   Экран — position:fixed overlay БЕЗ document.write: document.write посреди
+   парсинга сливает <body style> тёмного экрана с живой страницей (кейс 14.9:
+   весь мини-апп становился чёрным, вёрстка ломалась).
+   Task 129: в режиме кабинета (startapp=_cab) config.js по замыслу НЕ грузится —
+   гарант молчит, экран кабинета рисует SZ-CAB main. */
+if (!window.SZ_CONFIG && !window.__TOC_CABINET) {
+  (function () {
+    try {
+      var w = window.Telegram && window.Telegram.WebApp;
+      var late = w && w.initDataUnsafe && w.initDataUnsafe.start_param;
+      if (late && ('' + late).length <= 64
+          && location.search.indexOf('tgWebAppStartParam=') === -1) {
+        location.replace('?tgWebAppStartParam=' + encodeURIComponent(late));
+      }
+    } catch (e) {}
+  })();
+  (function () {
+    try {
+      var wrapEl = document.querySelector('.wrap');
+      if (wrapEl && wrapEl.parentNode) wrapEl.parentNode.removeChild(wrapEl);
+      var d = document.createElement('div');
+      d.setAttribute('style', 'position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;'
+        + 'font-family:\'Manrope\',-apple-system,Segoe UI,Roboto,sans-serif;background:#0E1624;'
+        + 'color:#E9EFF9;display:flex;align-items:center;justify-content:center;margin:0');
+      d.innerHTML = '<div style="text-align:center;padding:24px;max-width:420px">'
+        + '<div style="font-size:44px;margin-bottom:12px">📖</div>'
+        + '<div style="font-size:18px;font-weight:600;margin-bottom:8px">Contents not found</div>'
+        + '<div style="font-size:14px;opacity:.7;line-height:1.5">'
+        + 'Open the contents via the pinned button in the channel or the bot’s menu button — the entry is configured there.'
+        + '</div></div>';
+      document.body.appendChild(d);
+    } catch (e) {}
+  })();
+}
+</script>
+
+<script>
+/* SZ-STOP guard (Task 193): авто-стоп тенанта должен быть виден и в шелле.
+   Task 127 ставит заглушку ТОЛЬКО в docs/<канал>/index.html, но кнопка
+   канала ведёт в этот шелл (Task 116, Direct-Link), а он грузит из папки
+   тенанта только config.js/posts.json/topics.json — каталог работал под
+   стопом (репорт босса 27.10.2026, тест testovuj). Два сигнала:
+   1) window.SZ_STOPPED — флаг, который авто-стоп дописывает в config.js
+      (синхронный, виден до рендера);
+   2) status.json в папке тенанта — fetch no-store, свежее кэша Pages
+      (max-age=600); страховка, если config.js не переписался.
+   Оверлей — тот же приём, что у гварда выше (без document.write).
+   Режим кабинета (startapp=_cab) не гасим: у кабинета своего стопа нет. */
+(function () {
+  if (window.__TOC_CABINET) return;
+  var PAGES_BASE = 'https://eremeevmaks41-sys.github.io/soderzhanie-pages/';
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function showStop(d) {
+    if (window.__SZ_STOP_SHOWN) return;
+    window.__SZ_STOP_SHOWN = true;
+    try {
+      var ch = esc(d.channel || window.__TOC_CHANNEL || '');
+      var cfgBot = (window.SZ_CONFIG && window.SZ_CONFIG.bot_username) || '';
+      var title = esc(d.title || 'Catalog temporarily unavailable');
+      var msg = esc(d.msg || 'The table of contents service period has expired. Updates are paused, but all posts are kept.');
+      var hint = esc(d.hint || 'Renew the subscription — the catalog will come back with all its data.');
+      var btn = esc(d.btn || 'Renew subscription');
+      var renew = esc(d.renew || ('https://t.me/' + (cfgBot || 'oglavlenie_shop_bot') + '?start=renew'));
+      var o = document.createElement('div');
+      o.setAttribute('style', 'position:fixed;left:0;top:0;right:0;bottom:0;z-index:100000;'
+        + 'font-family:\'Manrope\',-apple-system,Segoe UI,Roboto,sans-serif;background:#0E1624;'
+        + 'color:#E9EFF9;display:flex;align-items:center;justify-content:center;margin:0;padding:24px');
+      o.innerHTML = '<div style="text-align:center;max-width:420px">'
+        + '<div style="font-size:44px;margin-bottom:12px">📁</div>'
+        + '<div style="font-size:19px;font-weight:600;margin-bottom:10px">' + title + '</div>'
+        + '<div style="font-size:14px;opacity:.8;line-height:1.55">' + msg + '</div>'
+        + '<div style="font-size:13px;opacity:.6;margin-top:10px;line-height:1.5">' + hint + '</div>'
+        + '<a href="' + renew + '" style="display:inline-block;margin-top:22px;padding:12px 26px;'
+        + 'border-radius:12px;background:#2EA6FF;color:#fff;text-decoration:none;'
+        + 'font-size:15px;font-weight:600">' + btn + '</a>'
+        + (ch ? '<div style="font-size:11px;opacity:.45;margin-top:24px;overflow-wrap:anywhere">@' + ch + '</div>' : '')
+        + '</div>';
+      document.body.appendChild(o);
+    } catch (e) {}
+  }
+  window.__SZ_SHOW_STOP = showStop;
+  /* 1) синхронный флаг из config.js (config.js грузится СТРОГО выше этого блока) */
+  try { if (window.SZ_STOPPED) showStop(window.SZ_STOPPED); } catch (e) {}
+  /* 2) асинхронный status.json из папки тенанта */
+  try {
+    var stCh = String(window.__TOC_CHANNEL || '');
+    if (stCh && stCh.indexOf('_cab') !== 0) {
+      fetch(PAGES_BASE + stCh + '/status.json?sz=' + Date.now(), {cache: 'no-store'})
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { if (j && j.status === 'stopped') showStop(j); })
+        .catch(function () {});
+    }
+  } catch (e) {}
+})();
+</script>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   «Оглавление телеграм-канала» · ядро мини-аппа
+   Порядок работы: config.js → лицензия → posts.json → рендер.
+   Править этот файл не нужно: всё настраивается в config.js.
+   ══════════════════════════════════════════════════════════════ */
+(function(){
+'use strict';
+
+var SALT = 'SODERZHANIE-EN-v1-4k8t';               // служебная соль лицензии
+var PAGE_SIZE = 100;                            // карточек за одну подгрузку
+var cfg = window.SZ_CONFIG || {};
+/* ── Счётчик открытий «Оглавления» (v1.7.28): 1×1-пиксель на наш бэкенд.
+   Без внешних сервисов и личных данных: id браузера случайный, живёт в
+   localStorage; в лог уходит только его хэш. Молчит, если beacon не задан
+   (старые config.js) или канал не определился. ── */
+try { (function(){
+  if (!cfg || !cfg.beacon || !cfg.channel_url) return;
+  var m = String(cfg.channel_url).match(/t\.me\/([A-Za-z0-9_]+)/); if (!m) return;
+  var v = null;
+  try { v = localStorage.getItem('szvid'); } catch (e) {}
+  if (!v) { v = Math.random().toString(36).slice(2) + Date.now().toString(36);
+            try { localStorage.setItem('szvid', v); } catch (e) {} }
+  new Image().src = String(cfg.beacon).replace(/\/+$/, '') + '/open?ch=' +
+    encodeURIComponent(m[1]) + '&v=' + encodeURIComponent(v) + '&t=' + Date.now();
+})(); } catch (e) {}
+
+
+/* ── Telegram WebApp: тема и открытие ссылок ──
+   Официальный скрипт (см. <head>) создаёт window.Telegram.WebApp и ВНЕ
+   Telegram — но там он фиктивный: platform='unknown', postEvent уходит
+   в никуда. Настоящий клиент всегда помечает мини-апп параметрами
+   tgWebApp* в адресе страницы. Поэтому мостом считаем только настоящий
+   контекст мини-аппа — иначе фиктивные вызовы в обычном браузере
+   затмят рабочие обходные пути ниже. */
+var rawTg = null, tg = null, bridgePending = true, bridgeTimer = null;
+function adoptBridge(){
+  rawTg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+  if (!rawTg) return false;   /* скрипт ещё едет — остаёмся в режиме ожидания */
+  var realBridge = (rawTg.platform && rawTg.platform !== 'unknown') ||
+                   (rawTg.initData && String(rawTg.initData).length > 0) ||
+                   /[?&#]tgWebApp/.test(window.location.href);
+  if (!realBridge){
+    bridgePending = false;   /* фиктивный — окончательно */
+    diagNote('dummy WebApp (outside Telegram) — ignoring the bridge');
+    return false;
+  }
+  tg = rawTg; bridgePending = false;
+  try { tg.ready(); tg.expand(); } catch(e){}
+  themeApply();
+  headerColorApply();
+  wireTgBack();   /* кнопка «Назад» ставится на старте — при позднем приходе моста ставим снова */
+  if (tg.onEvent) { try { tg.onEvent('themeChanged', function(){ themeApply(); headerColorApply(); }); } catch(e){} }
+  var late = document.getElementById('tgBanner');
+  if (late && late.parentNode) late.parentNode.removeChild(late);
+  diagNote('bridge connected (async): platform=' + (tg.platform || '?') + ' · ver=' + (tg.version || '?'));
+  return true;
+}
+adoptBridge();
+if (bridgePending && !rawTg){
+  var settleBridge = function(){
+    if (settleBridge.done) return;   /* финал фиксируется ровно один раз */
+    settleBridge.done = true;
+    bridgePending = false;
+    clearTimeout(bridgeTimer);
+    if (!tg && !rawTg) diagNote('bridge never arrived (error/timeout) — opening as a plain page');
+    maybeBridgeBanner();
+  };
+  var bridgeArrive = function(){
+    clearTimeout(bridgeTimer);
+    if (!tg) adoptBridge();
+    settleBridge();
+  };
+  var bridgeEl = document.querySelector('script[src*="telegram-web-app.js"]');
+  if (bridgeEl){
+    bridgeEl.addEventListener('load', bridgeArrive);
+    bridgeEl.addEventListener('error', settleBridge);
+  } else { settleBridge(); }
+  bridgeTimer = setTimeout(settleBridge, 3000);   /* скрипт завис: статус окончательный */
+}
+
+/* iOS Safari вешает :active только при обработчике touchstart */
+document.addEventListener('touchstart', function(){}, {passive:true});
+
+/* ── тактильная отдача: HapticFeedback есть в мобильном Telegram;
+   в обычном браузере и на десктопе вызовы молча игнорируются ── */
+function haptic(style){
+  if (tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
+    try { tg.HapticFeedback.impactOccurred(style); } catch(e){}
+  }
+}
+function hapticSelect(){
+  if (tg && tg.HapticFeedback && tg.HapticFeedback.selectionChanged) {
+    try { tg.HapticFeedback.selectionChanged(); } catch(e){}
+  }
+}
+function hapticNotify(type){
+  if (tg && tg.HapticFeedback && tg.HapticFeedback.notificationOccurred) {
+    try { tg.HapticFeedback.notificationOccurred(type); } catch(e){}
+  }
+}
+
+/* ── нативная кнопка «Назад» Telegram: дублирует внутреннюю кнопку «← …» ── */
+var tgBackWired = false;
+function wireTgBack(){
+  if (!tg || !tg.BackButton || tgBackWired) return;
+  tgBackWired = true;
+  try {
+    tg.onEvent('backButtonClicked', function(){
+      var b = document.getElementById('backBtn');
+      if (b && b.style.display !== 'none') b.click();
+    });
+  } catch(e){}
+}
+function updateTgBack(){
+  if (!tg || !tg.BackButton || !tgBackWired) return;
+  var b = document.getElementById('backBtn');
+  var need = !!(b && b.style.display === 'block');
+  try { if (need) tg.BackButton.show(); else tg.BackButton.hide(); } catch(e){}
+}
+
+/* ── тост + копирование ссылки (кнопка «Поделиться» в шапке) ── */
+var toastTimer = null;
+function toast(msg){
+  var t = document.getElementById('toast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));'
+      + 'transform:translateX(-50%) translateY(8px);background:rgba(25,20,10,.88);color:#fff;'
+      + 'font-size:13px;font-weight:600;padding:9px 16px;border-radius:999px;'
+      + 'opacity:0;transition:opacity .18s ease, transform .18s ease;'
+      + 'pointer-events:none;z-index:50;max-width:86%;text-align:center';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(8px)';
+  }, 1900);
+}
+function legacyCopy(text){
+  try {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:-999px;left:-999px;opacity:0';
+    document.body.appendChild(ta);
+    ta.select(); ta.setSelectionRange(0, text.length);
+    var ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch(e){ return false; }
+}
+function copyText(text, done){
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(
+      function(){ done(true); },
+      function(){ done(legacyCopy(text)); }
+    );
+  } else { done(legacyCopy(text)); }
+}
+
+function themeApply(){
+  var p = (tg && tg.themeParams) || {};
+  var dark = (tg && (p.bg_color ? isDark(p.bg_color) : (window.matchMedia('(prefers-color-scheme: dark)').matches)));
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  function isDark(hex){
+    if (!hex) return false;
+    var h = hex.replace('#','');
+    if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+    var r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16);
+    return (0.299*r + 0.587*g + 0.114*b) < 128;
+  }
+}
+/* шапка Telegram и фон под контентом окрашиваются в тему приложения;
+   meta theme-color — то же для обычного браузера */
+function headerColorApply(){
+  var bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  var m = document.querySelector('meta[name="theme-color"]');
+  if (m && bg) m.setAttribute('content', bg);
+  if (tg && tg.setHeaderColor) { try { tg.setHeaderColor(bg); } catch(e){ try { tg.setHeaderColor('bg_color'); } catch(e2){} } }
+  if (tg && tg.setBackgroundColor) { try { tg.setBackgroundColor(bg); } catch(e){} }
+}
+if (!tg) { themeApply(); headerColorApply(); }   /* без моста тема по системной настройке; с мостом применил adoptBridge */
+
+/* iOS/iPadOS: переходы через target="_blank" и window.open во встроенном
+   браузере Telegram на iPhone блокируются молча — надёжные пути только
+   официальный API мини-аппа или навигация в той же вкладке. */
+var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '') ||
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); /* iPadOS 13+ маскируется под Mac */
+
+/* ── самодиагностика (Task 120: в футере только строки продукта —
+   линия скрыта, видна при ?diag=1, каждая заметка идёт в консоль):
+   записывает среду запуска и то, какая ветка открытия сработала ── */
+var diagEl = null, diagLog = [];
+function diagInit(){
+  diagEl = document.createElement('div');
+  diagEl.className = 'lic'; diagEl.id = 'diag';
+  /* Task 120 (директива босса 14.9): в футере только строки продукта —
+     линия самодиагностики скрыта; видна при ?diag=1, заметки всегда
+     дублируются в консоль (console.log) */
+  diagEl.style.display = /[?&]diag=/.test(location.search) ? '' : 'none';
+  var f = document.querySelector('footer');
+  if (f) f.appendChild(diagEl);
+  diagNote('start: tg=' + (tg
+    ? 'yes · platform=' + (tg.platform || '?') + ' · ver=' + (tg.version || '?')
+    : (rawTg ? 'NO (dummy WebApp outside Telegram — ignoring)'
+       : (bridgePending ? 'bridge still loading (async)…' : 'NO — plain page, no bridge'))));
+}
+function diagNote(msg){
+  try { console.log('[oglavlenie] ' + msg); } catch(e){}
+  if (!diagEl) return;
+  var d = new Date(), z = function(x){ return ('0'+x).slice(-2); };
+  diagLog.push(z(d.getHours())+':'+z(d.getMinutes())+':'+z(d.getSeconds())+' '+msg);
+  if (diagLog.length > 4) diagLog = diagLog.slice(-4);
+  diagEl.textContent = 'debug: ' + diagLog.join(' | ');
+}
+
+/* ── без моста Telegram (открытие не как мини-апп): изнутри страницы мост
+   создать нельзя. Пугающую ошибку убрали (Task 114): веб-режим полноценно
+   открывает посты той же вкладкой, факт режима виден в футере-диагностике ── */
+function showBridgeBanner(){
+  if (tg || !document.querySelector) return;
+  if (document.getElementById('tgBanner')) return;   /* уже показан — не дублируем */
+  /* Task 114: пугающего баннера больше нет — веб-режим полноценно открывает
+     посты той же вкладкой (routeOpen); режим виден в диагностике футера */
+  diagNote('web mode: posts open in the same tab');
+}
+/* async-мост мог ещё не доехать — раньше времени пугать пользователя нельзя:
+   баннер показываем только когда статус моста окончательный */
+function maybeBridgeBanner(){
+  if (bridgePending) return;
+  if (!tg) showBridgeBanner();
+}
+
+/* ── ОТКРЫТИЕ ПОСТОВ — стратегия живого приложения (проверена на
+   iOS и Android, 2026-07):
+     Telegram Desktop → tg.openTelegramLink (открывает внутри Telegram)
+     Telegram Web     → window.open (новая вкладка браузера)
+     Мобильные        → tg.openTelegramLink: переход прямо в канал,
+                        мини-апп НЕ закрывается — Telegram сам показывает
+                        пост поверх приложения; возврат свайпом или «Назад».
+   Тихий случай (пост из того же канала, откуда открыт мини-апп):
+   переход происходит корректно, НО без видимой смены экрана. Лечим по
+   официальной документации: нативный уход приложения в фон фиксируем
+   через visibilitychange; если за 1.5 с не свернулся:
+     iOS  → WebApp.close(): пост уже открыт позади, close() его покажет
+            (openLink вне жеста пользователя Telegram молча отбрасывает,
+            а на iOS он ещё и открывает внешний Safari);
+     иные → tg.openLink(): встроенный браузер, видимый рабочий путь. */
+var TG_LINK_FALLBACK_MS = 1500;
+function openInTelegram(url){
+  var settled = false;
+  function onVisChange(){
+    if (document.hidden){
+      settled = true;
+      document.removeEventListener('visibilitychange', onVisChange);
+      diagNote('app minimized — post opened, swipe back to return');
+    }
+  }
+  document.addEventListener('visibilitychange', onVisChange);
+  try { tg.openTelegramLink(url); diagNote('openTelegramLink sent'); }
+  catch(e){ diagNote('openTelegramLink error: ' + (e && e.message ? e.message : '?')); }
+  setTimeout(function(){
+    document.removeEventListener('visibilitychange', onVisChange);
+    if (settled) return;
+    if (tg.platform === 'ios' && tg.close){
+      diagNote('not minimized in 1.5s → close() (post already opened in background)');
+      try { tg.close(); } catch(e){}
+      /* последний шанс, если close клиентом не поддержан */
+      setTimeout(function(){
+        if (!settled && tg.openLink){
+          diagNote('close did not work → openLink');
+          try { tg.openLink(url, {try_instant_view:false}); } catch(e){}
+        }
+      }, 800);
+    } else if (tg.openLink){
+      diagNote('not minimized in 1.5s → openLink');
+      try { tg.openLink(url, {try_instant_view:false}); } catch(e){}
+    }
+  }, TG_LINK_FALLBACK_MS);
+}
+function openUrl(url){
+  if (!url) return;
+  if (!tg && bridgePending){
+    /* мост ещё едет (async): коротко дождёмся, чтобы тап не ушёл в запасную
+       ветку раньше времени; если мост так и не приехал — прежние пути */
+    diagNote('мост ещё грузится — жду его до 1.2 с');
+    var t0 = Date.now();
+    (function again(){
+      if (tg){ diagNote('bridge arrived — opening normally'); openUrl(url); return; }
+      if (!bridgePending || Date.now() - t0 > 1200){ routeOpen(url); return; }
+      setTimeout(again, 60);
+    })();
+    return;
+  }
+  routeOpen(url);
+}
+function routeOpen(url){
+  if (!url) return;
+  if (!tg){
+    /* вне мини-аппа (в т.ч. встроенный браузер Telegram из кнопки канала):
+       window.open блокируется молча — единственный надёжный путь везде —
+       навигация в той же вкладке: в Telegram откроет пост прямо в приложении,
+       в обычном браузере — страницу t.me с кнопкой «открыть в приложении» */
+    diagNote('нет моста → навигация той же вкладкой');
+    window.location.href = url;
+    return;
+  }
+  var plat = tg.platform || '';
+  /* Telegram Web (web/weba) — в новой вкладке браузера */
+  if (plat === 'web' || plat === 'weba') { window.open(url, '_blank'); return; }
+  /* нативные приложения (десктоп, macOS, iOS, Android) — прямо в
+     Telegram через openTelegramLink, без внешнего браузера */
+  var NATIVE_APP_PLATFORMS = {tdesktop:1, macos:1, ios:1, android:1, android_x:1};
+  var canUseTelegramLink = !!tg.openTelegramLink
+    && (!tg.isVersionAtLeast || tg.isVersionAtLeast('7.0'));
+  if (NATIVE_APP_PLATFORMS[plat] && canUseTelegramLink) { openInTelegram(url); return; }
+  /* неизвестная платформа или клиент старше Bot API 7.0 — старый добрый
+     openLink(): гарантированно видимый рабочий путь */
+  try { tg.openLink(url, {try_instant_view:false}); } catch(e){}
+}
+
+/* ── лицензия: sha256(licensee|salt) первые 16 hex = ключ ── */
+function hex(buf){
+  var out = '';
+  new Uint8Array(buf).forEach(function(b){ out += ('0'+b.toString(16)).slice(-2); });
+  return out;
+}
+function licenseValid(licensee, key){
+  if (!licensee || !key) return Promise.resolve(false);
+  if (!(window.crypto && crypto.subtle)) return Promise.resolve(false); // file:// — просто показываем баннер
+  /* Соль-паритет (v1.7.31, кейс testovuj 1.11.2026): EN-сборка + мини-апп-шелл
+     давали «демонстрационный режим» на валидной лицензии — в шелле одна соль,
+     в EN-движке другая. Ключ валиден, если совпал с ЛЮБОЙ из солей продукта;
+     алгоритм и префикс не менялись, старые ключи остаются ключами. */
+  var k = String(key).trim().toUpperCase();
+  return Promise.all(['SODERZHANIE-v1-7f3a', 'SODERZHANIE-EN-v1-4k8t'].map(function(salt){
+    var data = new TextEncoder().encode(String(licensee).trim().toLowerCase() + '|' + salt);
+    return crypto.subtle.digest('SHA-256', data).then(function(d){
+      return ('SZ-' + hex(d).slice(0,16)).toUpperCase() === k;
+    });
+  })).then(function(rs){ return rs.indexOf(true) !== -1; });
+}
+
+/* ── утилиты ── */
+/* ── авторство — часть лицензии (босс 31.10.2026: «наличие ссылок в футере
+   привязать к работоспособности, как и лицензию — убрал из кода — программа
+   перестаёт работать»). Проверяется фактический DOM: правка config.js не
+   помогает, сверяется то, что реально стоит в футере. ── */
+var _szSite = 'eremeevmaks41-sys.github' + '.io/oglavlenie';
+var _szMark = 'catalog for your channel';
+function _szBrandOK(){
+  try {
+    var f = document.querySelector('footer');
+    if (!f) return false;
+    var us = f.querySelector('.us');
+    if (!us) return false;
+    if (!us.offsetParent) return false;   /* блок спрятан (display:none и т.п.) */
+    var cs = getComputedStyle(us);
+    if (cs.display === 'none' || cs.visibility === 'hidden' || parseInt(cs.opacity, 10) === 0) return false;
+    if (us.textContent.indexOf(_szMark) === -1) return false;
+    var b = document.getElementById('footBot');
+    var s = document.getElementById('footSite');
+    if (!b || !s) return false;
+    var bh = String(b.getAttribute('href') || '');
+    var sh = String(s.getAttribute('href') || '');
+    var okBot = bh.indexOf('https://t.me/') === 0 && (
+      bh.indexOf('oglavlenie') !== -1 ||
+      (cfg.ref_bot && cfg.ref_code && bh.indexOf('https://t.me/' + cfg.ref_bot + '?start=r' + cfg.ref_code) === 0));
+    var okSite = sh.indexOf('https://') === 0 && sh.indexOf(_szSite) !== -1;
+    return okBot && okSite;
+  } catch(e){ return true; }   /* экзотическое окружение — не блокируем каталог */
+}
+function _szBrandStop(){
+  try {
+    var old = document.getElementById('szBrandStop');
+    if (old) old.parentNode.removeChild(old);
+    var ov = document.createElement('div');
+    ov.id = 'szBrandStop';
+    ov.setAttribute('style', 'position:fixed;left:0;top:0;right:0;bottom:0;'
+      + 'z-index:99999;background:#F3F7FD;display:flex;align-items:center;'
+      + 'justify-content:center;padding:24px');
+    ov.innerHTML = '<div style="background:#fff;border-radius:24px;'
+      + 'box-shadow:0 12px 40px rgba(42,171,238,.14);padding:40px 32px;'
+      + 'max-width:430px;text-align:center;'
+      + "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\">"
+      + '<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 18px;'
+      + 'background:linear-gradient(135deg,#2AABEE,#7C6CFF);display:flex;'
+      + 'align-items:center;justify-content:center">'
+      + '<svg width="30" height="30" viewBox="0 0 24 24" fill="none">'
+      + '<path d="M7 10V8a5 5 0 0 1 10 0v2h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V8a3 3 0 0 0-6 0v2Z" fill="#fff"/></svg></div>'
+      + '<h1 style="font-size:20px;color:#0F2437;margin:0 0 10px">Table of contents unavailable</h1>'
+      + '<p style="font-size:15px;line-height:1.55;color:#48607A;margin:0">'
+      + 'The product has been tampered with: the authorship block (signature and links to the author) was removed or altered on this page.'
+      + '<br>The catalog only works in its original, unmodified form.'
+      + '<br>To restore it, write to the chat of the bot you opened this page from.</p>'
+      + '</div>';
+    document.body.appendChild(ov);
+    ['list','chips','state'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.innerHTML = '';
+    });
+  } catch(e){}
+  throw new Error('SZ branding guard');   /* прерываем текущий поток загрузки */
+}
+setInterval(function(){ if (!_szBrandOK()) { try { _szBrandStop(); } catch(e){} } }, 25000);
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var MONTHS_NOM = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function dayLabel(iso){
+  var d = new Date(iso + 'T00:00:00');
+  var today = new Date(); today.setHours(0,0,0,0);
+  var yst = new Date(today.getTime() - 86400000);
+  var t = new Date(d.getTime());
+  if (t.getTime() === today.getTime()) return 'Today';
+  if (t.getTime() === yst.getTime()) return 'Yesterday';
+  var now = new Date();
+  var label = d.getDate() + ' ' + MONTHS[d.getMonth()];
+  if (d.getFullYear() !== now.getFullYear()) label += ' ' + d.getFullYear();
+  return label;
+}
+function normTag(s){ return String(s||'').replace(/^#/,'').toLowerCase(); }
+
+/* ── состояние приложения ── */
+var POSTS = [];        // все посты (новые сверху)
+var TAGS = [];         // [{tag, n}]
+var TOPICS = null;     // [{id,title,icon,tags[]}] из topics.json (может не быть)
+var view = 'feed';     // 'toc' | 'feed'
+var filterTopic = null;// id выбранной темы (режим тем)
+var filterMode = null; // универсальная группировка: 'months' | 'alpha' | 'kind'
+var tocGroup = null;   // выбранная группа внутри filterMode
+var filterTag = null;  // выбранный тег-фильтр (в виде «Лента»)
+var filterQ = '';      // поисковая строка
+var shown = PAGE_SIZE;
+
+function topicOf(p){
+  if (!TOPICS) return null;
+  var pt = (p.tags||[]).map(normTag);
+  for (var i = 0; i < TOPICS.length; i++){
+    var tt = TOPICS[i].tags || [];
+    for (var j = 0; j < tt.length; j++){
+      if (pt.indexOf(normTag(tt[j])) !== -1) return TOPICS[i].id;
+    }
+  }
+  return null;
+}
+
+/* ── универсальная группировка без тегов: месяцы / алфавит / тип постов ── */
+var MODES = [
+  {id:'months', icon:'📅', title:'By month'},
+  {id:'alpha',  icon:'🔤', title:'By alphabet'},
+  {id:'kind',   icon:'🎭', title:'By post type'}
+];
+var KIND_META = {
+  text:{icon:'📝', title:'Texts'}, photo:{icon:'📷', title:'Photos'},
+  video:{icon:'🎬', title:'Videos'}, audio:{icon:'🎧', title:'Audio'},
+  poll:{icon:'📊', title:'Polls'}, file:{icon:'📎', title:'Files'},
+  sticker:{icon:'🎭', title:'Stickers'}
+};
+function kindOf(p){
+  if (p.kind && KIND_META[p.kind]) return p.kind;
+  var t = p.title || '';
+  if (t.indexOf('📷') === 0) return 'photo';
+  if (t.indexOf('🎬') === 0) return 'video';
+  if (t.indexOf('🎧') === 0) return 'audio';
+  if (t.indexOf('📊') === 0) return 'poll';
+  if (t.indexOf('📎') === 0) return 'file';
+  return 'text';
+}
+function groupKey(p, mode){
+  var md = mode || filterMode;
+  if (md === 'months') return (p.date || '').slice(0,7);
+  if (md === 'alpha'){
+    var t = (p.title || '').replace(/^[^0-9a-z]+/i, '');
+    return (t.charAt(0) || '#').toUpperCase();
+  }
+  return kindOf(p);
+}
+function monthLabel(ym){
+  var m = parseInt(ym.slice(5,7), 10);
+  return (MONTHS_NOM[m-1] || ym) + ' ' + ym.slice(0,4);
+}
+function groupCards(mode){
+  var counts = {};
+  POSTS.forEach(function(p){
+    var k = groupKey(p, mode); if (!k) k = '#';
+    if (!counts[k]) counts[k] = {key:k, n:0};
+    counts[k].n++;
+  });
+  var arr = Object.keys(counts).map(function(k){ return counts[k]; });
+  if (mode === 'months') arr.sort(function(a,b){ return a.key < b.key ? 1 : -1; });
+  else if (mode === 'kind') arr.sort(function(a,b){ return b.n - a.n; });
+  else arr.sort(function(a,b){ return a.key > b.key ? 1 : (a.key < b.key ? -1 : 0); });
+  return arr;
+}
+function groupLabel(k){
+  if (filterMode === 'months') return monthLabel(k);
+  if (filterMode === 'kind') return (KIND_META[k] || {title:'Texts'}).title;
+  return 'Starting with «' + k + '»';
+}
+function groupIcon(k){
+  if (filterMode === 'months') return '📅';
+  if (filterMode === 'kind') return (KIND_META[k] || {icon:'📝'}).icon;
+  return k; // алфавит: буква сама — иконка
+}
+
+/* ── «По темам» (v56-ru): счётчик для карточки корня. Если темы из
+   topics.json покрывают посты — считаются карточки тем (+ «Разное»),
+   иначе — число тегов постов. ── */
+function topicCardCount(){
+  if (TOPICS){
+    var n = 0, covered = 0;
+    TOPICS.forEach(function(t){
+      var c = 0;
+      POSTS.forEach(function(p){ if (topicOf(p) === t.id) c++; });
+      if (c) n++;
+      covered += c;
+    });
+    if (covered > 0){
+      var misc = POSTS.length - covered, total = n + (misc > 0 ? 1 : 0);
+      return { n: total, word: pluralWord(total, ['topic','topics','topics']) };
+    }
+  }
+  return { n: TAGS.length, word: pluralWord(TAGS.length, ['tag','tags','tags']) };
+}
+/* ── шапка из конфига ── */
+function applyConfig(){
+  var name = cfg.channel_name || 'Contents';
+  document.title = name;
+  document.getElementById('hName').textContent = name;
+  document.getElementById('hOpen').textContent = cfg.channel_button || 'Channel';
+  if (cfg.channel_url) {
+    var a = document.getElementById('hOpen');
+    a.href = cfg.channel_url;
+    a.addEventListener('click', function(ev){
+      haptic('light');
+      // мини-апп → openUrl: openTelegramLink, при тихом сбое iOS —
+      // видимый запасной путь через браузер (стратегия живого приложения);
+      // десктоп-браузер без моста → НЕ перехватываем: работает обычный href
+      if (tg || iOS) {
+        ev.preventDefault(); openUrl(cfg.channel_url);
+      }
+    });
+  } else { document.getElementById('hOpen').style.display = 'none'; }
+  if (cfg.header_emoji) document.getElementById('logo').textContent = cfg.header_emoji;
+  var lic = cfg.licensee ? ('licensed to: ' + cfg.licensee + (cfg.license_id ? ' · license ' + cfg.license_id : '')) : '';
+  document.getElementById('licLine').textContent = lic;
+}
+   /* ── футер «о нас» (босс 30.10.2026: «во всех экземплярах миниаппов в футере —
+      информация про нас и ссылки как на сайт, так и в бота»). Адреса можно
+      переопределить в config.js (footer_bot/footer_site); у комплекта с рефкодом
+      ссылка на бот несёт payload владельца (start=r<код>) — билборд Task 142 жив. ── */
+   var fB = document.getElementById('footBot');
+   if (fB) {
+     var fHref = cfg.footer_bot || 'https://t.me/oglavlenie_shop_bot';
+     if (cfg.ref_bot) {
+       fHref = 'https://t.me/' + cfg.ref_bot + (cfg.ref_code ? ('?start=r' + cfg.ref_code) : '');
+       fB.textContent = '\u26a1 \u041a\u0430\u0442\u0430\u043b\u043e\u0433 \u043e\u0442 \u041e\u0433\u043b\u0430\u0432\u043b\u0435\u043d\u0438\u0435';
+     }
+     fB.href = fHref;
+   }
+   var fS = document.getElementById('footSite');
+   if (fS) fS.href = cfg.footer_site || 'https://eremeevmaks41-sys.github.io/oglavlenie/';
+
+/* ── фильтрация и рендер ── */
+function pluralWord(n, forms){
+  var a = n % 10, b = n % 100;
+  if (a === 1 && b !== 11) return forms[0];
+  if (a >= 2 && a <= 4 && (b < 10 || b >= 20)) return forms[1];
+  return forms[2];
+}
+function plural(n){ return pluralWord(n, ['post','posts','posts']); }
+function filtered(){
+  var q = filterQ.trim().toLowerCase();
+  var inToc = view === 'toc' && !filterQ.trim();
+  return POSTS.filter(function(p){
+    if (inToc && filterTopic){
+      var t = topicOf(p) || '__misc';
+      if (t !== filterTopic) return false;
+    } else if (inToc && filterMode && tocGroup){
+      if (groupKey(p) !== tocGroup) return false;
+    } else if (filterTag && !(p.tags||[]).some(function(t){ return normTag(t) === filterTag; })) return false;
+    if (!q) return true;
+    var hay = ((p.title||'') + ' ' + (p.preview||'') + ' ' + (p.tags||[]).join(' ')).toLowerCase();
+    return hay.indexOf(q) !== -1;
+  });
+}
+function renderChips(){
+  var box = document.getElementById('chips');
+  box.innerHTML = '';
+  var chipAll = document.createElement('div');
+  chipAll.className = 'chip' + (filterTag ? '' : ' active');
+  chipAll.textContent = 'All topics';
+  chipAll.onclick = function(){ hapticSelect(); filterTag = null; shown = PAGE_SIZE; render(); };
+  box.appendChild(chipAll);
+  TAGS.slice(0, 14).forEach(function(t){
+    var c = document.createElement('div');
+    c.className = 'chip' + (filterTag === normTag(t.tag) ? ' active' : '');
+    c.textContent = t.tag + ' · ' + t.n;
+    c.onclick = function(){
+      hapticSelect();
+      filterTag = (filterTag === normTag(t.tag)) ? null : normTag(t.tag);
+      shown = PAGE_SIZE; render();
+    };
+    box.appendChild(c);
+  });
+}
+/* ── вид «Оглавление»: темы либо универсальные разделы + возврат ── */
+function renderViews(){
+  var box = document.getElementById('views');
+  if (!POSTS.length){ box.style.display = 'none'; return; }
+  box.style.display = '';
+  document.getElementById('vToc').className = (view === 'toc') ? 'active' : '';
+  document.getElementById('vFeed').className = (view === 'feed') ? 'active' : '';
+}
+function showBack(label, onClick){
+  var b = document.getElementById('backBtn');
+  if (!b){
+    b = document.createElement('button');
+    b.id = 'backBtn'; b.className = 'back';
+    var list = document.getElementById('list');
+    list.parentNode.insertBefore(b, list);
+  }
+  b.textContent = label;
+  b.onclick = function(){ haptic('light'); onClick(); };
+  b.style.display = 'block';
+  updateTgBack();
+}
+function hideBack(){
+  var b = document.getElementById('backBtn');
+  if (b) b.style.display = 'none';
+  updateTgBack();
+}
+var TAG_ICONS = {
+  russia:'🇷🇺', россия:'🇷🇺', worldnews:'🌍', мировыеновости:'🌍',
+  conflict:'⚔️', конфликт:'⚔️', society:'🏙️', общество:'🏙️',
+  economy:'📈', экономика:'📈', politics:'🏛️', политика:'🏛️',
+  health:'🏥', здоровье:'🏥', science:'🔬', наука:'🔬',
+  energy:'⚡', энергетика:'⚡', sport:'⚽', спорт:'⚽',
+  technology:'💻', технологии:'💻', culture:'🎭', культура:'🎭',
+  family:'👨‍👩‍👧', семья:'👨‍👩‍👧', incident:'🚨', происшествия:'🚨'
+};
+function tagIcon(tag){
+  return TAG_ICONS[normTag(tag)] || '🏷️';
+}
+/* ── экран «По темам» (v54-ru): карточки тем из topics.json (если реально
+   покрывают посты) + каждый тег постов своей карточкой. Тап по карточке —
+   отфильтрованный список постов. ── */
+function renderTopicsScreen(){
+  showBack('← Contents', function(){ filterMode = null; filterTopic = null; filterTag = null; tocGroup = null; shown = PAGE_SIZE; render(); });
+  renderState(null);
+  var list = document.getElementById('list');
+  var html = '';
+  if (TOPICS){
+    var covered = 0, misc = 0;
+    POSTS.forEach(function(p){ if (topicOf(p)) covered++; else misc++; });
+    if (covered > 0){
+      html += '<div class="tgrid">';
+      TOPICS.forEach(function(t){
+        var n = 0;
+        POSTS.forEach(function(p){ if (topicOf(p) === t.id) n++; });
+        if (!n) return;
+        html += '<div class="tcard" data-topic="' + esc(t.id) + '">' +
+                  '<div class="t-ico">' + esc(t.icon || '🏷') + '</div>' +
+                  '<div class="t-title">' + esc(t.title || t.id) + '</div>' +
+                  '<div class="t-n">' + n + ' ' + plural(n) + '</div>' +
+                '</div>';
+      });
+      if (misc){
+        html += '<div class="tcard" data-topic="__misc">' +
+                  '<div class="t-ico">🗂</div>' +
+                  '<div class="t-title">Misc</div>' +
+                  '<div class="t-n">' + misc + ' ' + plural(misc) + '</div>' +
+                '</div>';
+      }
+      html += '</div>';
+    }
+  }
+  if (TAGS.length){
+    html += '<div class="slabel">All topics</div><div class="tgrid">';
+    TAGS.forEach(function(t){
+      var nt = normTag(t.tag);
+      html += '<div class="tcard" data-ttag="' + esc(nt) + '">' +
+                '<div class="t-ico">' + esc(tagIcon(t.tag)) + '</div>' +
+                '<div class="t-title">' + esc(t.tag) + '</div>' +
+                '<div class="t-n">' + t.n + ' ' + plural(t.n) + '</div>' +
+              '</div>';
+    });
+    html += '</div>';
+  }
+  if (!html) return renderState('empty');
+  list.innerHTML = html;
+  list.style.display = '';
+  list.querySelectorAll('.tcard[data-topic]').forEach(function(el){
+    el.addEventListener('click', function(){
+      haptic('medium');
+      filterTopic = el.getAttribute('data-topic');
+      shown = PAGE_SIZE; render();
+      window.scrollTo(0, 0);
+    });
+  });
+  list.querySelectorAll('.tcard[data-ttag]').forEach(function(el){
+    el.addEventListener('click', function(){
+      haptic('medium');
+      filterTag = el.getAttribute('data-ttag');
+      shown = PAGE_SIZE; render();
+      window.scrollTo(0, 0);
+    });
+  });
+  var more = document.getElementById('moreBtn');
+  if (more) more.style.display = 'none';
+}
+function renderModeGrid(){
+  hideBack();
+  renderState(null);
+  var list = document.getElementById('list');
+  /* v54-ru: корень оглавления — ВСЕГДА четыре равные карточки:
+     три универсальные (месяцы/алфавит/типы) + «По темам» (темы и теги).
+     Карточки никогда не пропадают и не смешиваются с содержимым разделов. */
+  var html = '<div class="tgrid">';
+  MODES.forEach(function(m){
+    var gn = groupCards(m.id).length;
+    html += '<div class="tcard" data-mode="' + m.id + '">' +
+              '<div class="t-ico">' + m.icon + '</div>' +
+              '<div class="t-title">' + m.title + '</div>' +
+              '<div class="t-n">' + gn + ' ' + pluralWord(gn, ['section','sections','sections']) + '</div>' +
+            '</div>';
+  });
+  var tn = topicCardCount();
+  html += '<div class="tcard" data-mode="topics">' +
+            '<div class="t-ico">🏷</div>' +
+            '<div class="t-title">By topics</div>' +
+            '<div class="t-n">' + tn.n + ' ' + tn.word + '</div>' +
+          '</div>';
+  html += '</div>';
+  list.innerHTML = html;
+  list.style.display = '';
+  list.querySelectorAll('.tcard').forEach(function(el){
+    el.addEventListener('click', function(){
+      haptic('medium');
+      filterMode = el.getAttribute('data-mode');   // 'months' | 'alpha' | 'kind' | 'topics'
+      tocGroup = null; shown = PAGE_SIZE; render();
+      window.scrollTo(0, 0);
+    });
+  });
+  var more = document.getElementById('moreBtn');
+  if (more) more.style.display = 'none';
+}
+function renderGroupCards(){
+  showBack('← Contents',
+           function(){ filterMode = null; tocGroup = null; shown = PAGE_SIZE; render(); });
+  renderState(null);
+  var list = document.getElementById('list');
+  var cards = groupCards(filterMode);
+  var html = '<div class="tgrid">';
+  cards.forEach(function(c){
+    html += '<div class="tcard" data-group="' + esc(c.key) + '">' +
+              '<div class="t-ico">' + esc(groupIcon(c.key)) + '</div>' +
+              '<div class="t-title">' + esc(groupLabel(c.key)) + '</div>' +
+              '<div class="t-n">' + c.n + ' ' + plural(c.n) + '</div>' +
+            '</div>';
+  });
+  html += '</div>';
+  list.innerHTML = html;
+  list.style.display = '';
+  list.querySelectorAll('.tcard').forEach(function(el){
+    el.addEventListener('click', function(){
+      haptic('medium');
+      tocGroup = el.getAttribute('data-group');
+      shown = PAGE_SIZE; render();
+      window.scrollTo(0, 0);
+    });
+  });
+  var more = document.getElementById('moreBtn');
+  if (more) more.style.display = 'none';
+}
+function renderList(items){
+  var list = document.getElementById('list');
+  var html = '', lastDay = '', groupOpen = false;
+  items.slice(0, shown).forEach(function(p){
+    if (p.date !== lastDay){
+      if (groupOpen){ html += '</div>'; }
+      html += '<div class="day">' + esc(dayLabel(p.date)) + '</div><div class="group">';
+      lastDay = p.date; groupOpen = true;
+    }
+    var tags = (p.tags||[]).map(function(t){ return '<span class="c-tag">' + esc(t) + '</span>'; }).join('');
+    html += '<a class="card"' + (p.url ? ' href="' + esc(p.url) + '" target="_blank" rel="noopener"' : '') + '>' +
+              '<div class="c-top">' +
+                (p.time ? '<span class="c-time">' + esc(p.time) + '</span>' : '') +
+                '<span class="c-title">' + esc(p.title || 'Post') + '</span>' +
+              '</div>' +
+              (p.preview ? '<div class="c-prev">' + esc(p.preview) + '</div>' : '') +
+              (tags ? '<div class="c-tags">' + tags + '</div>' : '') +
+            '</a>';
+  });
+  if (groupOpen) html += '</div>';
+  list.innerHTML = html;
+  list.querySelectorAll('a.card[href]').forEach(function(el){
+    el.addEventListener('click', function(ev){
+      if (ev.metaKey || ev.ctrlKey) return;   // ctrl/⌘+клик — новую вкладку открывает браузер
+      haptic('light');
+      // мини-апп → openUrl: переход внутрь Telegram, при тихом сбое iOS
+      // (мини-апп открыт из того же канала) — видимый запасной путь через
+      // браузер; десктоп-браузер без моста → НЕ перехватываем: работает
+      // настоящая ссылка
+      if (tg || iOS) {
+        ev.preventDefault();
+        /* мгновенная визуальная отдача, пока Telegram выполняет переход
+           (до 1.5 с) — тап не ощущается «мёртвым» (опыт живого приложения) */
+        el.classList.add('pressed');
+        setTimeout(function(){ el.classList.remove('pressed'); }, 300);
+        openUrl(el.getAttribute('href'));
+      }
+    });
+  });
+  var more = document.getElementById('moreBtn');
+  if (items.length > shown){
+    if (!more){
+      more = document.createElement('button');
+      more.id = 'moreBtn'; more.className = 'more';
+      more.onclick = function(){ haptic('light'); shown += PAGE_SIZE; render(); };
+      document.getElementById('list').after(more);
+    }
+    more.textContent = 'Show more (' + (items.length - shown) + ')';
+    more.style.display = 'block';
+  } else if (more){ more.style.display = 'none'; }
+}
+function renderState(kind, extra){
+  var st = document.getElementById('state');
+  var list = document.getElementById('list');
+  var more = document.getElementById('moreBtn');
+  if (more) more.style.display = 'none';
+  if (!kind){ st.style.display = 'none'; list.style.display = ''; return; }
+  list.style.display = 'none';
+  st.style.display = 'block';
+  if (kind === 'empty')   st.innerHTML = '<div class="big">📭</div><div class="t">Nothing here yet</div><div>Posts will appear here right after the first publication or import.</div>';
+  if (kind === 'nomatch') st.innerHTML = '<div class="big">🔍</div><div class="t">Nothing found</div><div>Try changing the query or picking another topic.</div>';
+  if (kind === 'error'){
+    document.getElementById('chips').style.display = 'none';
+    st.innerHTML = '<div class="big">⚠️</div><div class="t">Failed to load the table of contents</div><div>' + esc(extra||'') + '</div>'
+      + '<button type="button" class="more" id="retryBtn" style="max-width:220px;margin:18px auto 0">Retry</button>';
+    var rb = document.getElementById('retryBtn');
+    if (rb) rb.onclick = function(){ haptic('light'); load(); loadTopics(); };
+  }
+}
+function render(){
+  var items = filtered();
+  var q = filterQ.trim();
+  var inToc = view === 'toc' && !q;
+  var sub = POSTS.length ? ('A catalog of ' + POSTS.length + ' ' + plural(POSTS.length)) : 'A catalog of the channel’s posts';
+  if (inToc && filterMode && filterMode !== 'topics' && !tocGroup){
+    var gn = groupCards().length;
+    sub = gn + ' ' + pluralWord(gn, ['section','sections','sections']);
+  } else if (inToc && filterMode === 'topics' && !filterTopic && !filterTag){
+    var tc = topicCardCount();
+    sub = tc.n + ' ' + tc.word;
+  }
+  document.getElementById('hSub').textContent = sub;
+  renderViews();
+  document.getElementById('chips').style.display = inToc ? 'none' : '';
+  if (!POSTS.length){ renderChips(); return renderState('empty'); }
+  if (inToc && !filterMode && !filterTopic && !tocGroup && !filterTag){ renderModeGrid(); return; }  // v54-ru корень: 4 карточки
+  if (inToc && filterMode === 'topics' && !filterTopic && !filterTag){ renderTopicsScreen(); return; }
+  if (inToc && filterMode && filterMode !== 'topics' && !tocGroup){ renderGroupCards(); return; }
+  if (inToc && filterTopic){
+    showBack('← Topics', function(){ filterTopic = null; shown = PAGE_SIZE; render(); });
+  } else if (inToc && filterMode && tocGroup){
+    showBack('← Sections', function(){ tocGroup = null; shown = PAGE_SIZE; render(); });
+  } else if (inToc && filterTag){
+    showBack('← Topics', function(){ filterTag = null; shown = PAGE_SIZE; render(); });
+  } else { hideBack(); }
+  renderChips();
+  if (!items.length) return renderState('nomatch');
+  renderState(null);
+  renderList(items);
+  document.getElementById('list').style.display = '';
+}
+
+/* ── поиск ── */
+var qEl = document.getElementById('q'), clrEl = document.getElementById('clr');
+qEl.addEventListener('input', function(){
+  filterQ = qEl.value; shown = PAGE_SIZE;
+  clrEl.style.display = qEl.value ? 'block' : 'none';
+  render();
+});
+clrEl.addEventListener('click', function(){
+  haptic('light');
+  qEl.value = ''; filterQ = ''; clrEl.style.display = 'none'; shown = PAGE_SIZE; render(); qEl.focus();
+});
+
+/* ── переключатель вида: Оглавление / Лента ── */
+document.getElementById('vToc').addEventListener('click', function(){
+  hapticSelect();
+  view = 'toc'; filterTopic = null; filterTag = null; filterMode = null; tocGroup = null; shown = PAGE_SIZE; render();
+});
+document.getElementById('vFeed').addEventListener('click', function(){
+  hapticSelect();
+  view = 'feed'; filterTopic = null; filterTag = null; filterMode = null; tocGroup = null; shown = PAGE_SIZE; render();
+});
+
+/* ── загрузка данных ── */
+var RAW_TOPICS = null;    // содержимое topics.json (если есть)
+var POSTS_READY = false;  // posts.json загружен
+function tryApplyTopics(){
+  if (!RAW_TOPICS || !POSTS_READY) return;
+  var ts = (RAW_TOPICS && RAW_TOPICS.topics) || [];
+  TOPICS = ts.filter(function(t){ return t && t.id && (t.tags||[]).length; });
+  if (!TOPICS.length) TOPICS = null;
+  render();   // v56-ru: темы живут внутри карточки «По темам» — корень всегда одинаковый
+}
+function loadTopics(){
+  fetch('topics.json?v=' + Date.now(), {cache:'no-store'})
+    .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(data){ RAW_TOPICS = data; tryApplyTopics(); })
+    .catch(function(){ if (POSTS_READY) render(); });   // topics.json нет/недоступен — остаётся текущий вид
+}
+function boot(data){
+  var posts = Array.isArray(data) ? data : (data.posts || []);
+  POSTS = posts.map(function(p){
+    var d = String(p.date || '');
+    return {
+      date: d.slice(0,10), time: String(p.time || (d.length > 10 ? d.slice(11,16) : '')),
+      title: p.title || '', preview: p.preview || '',
+      tags: p.tags || [], kind: p.kind || '', url: p.url || ''
+    };
+  }).sort(function(a,b){
+    var ka = a.date + ' ' + a.time, kb = b.date + ' ' + b.time;
+    return ka < kb ? 1 : (ka > kb ? -1 : 0);
+  });
+  if (!POSTS_READY && cfg.default_view !== 'feed') view = 'toc';   // вид по умолчанию — только при первой загрузке
+  var counts = {};
+  POSTS.forEach(function(p){ (p.tags||[]).forEach(function(t){
+    var k = normTag(t); if (!k) return;
+    if (!counts[k]) counts[k] = {tag: t, n: 0};
+    counts[k].n++;
+  });});
+  TAGS = Object.keys(counts).map(function(k){ return counts[k]; })
+    .sort(function(a,b){ return b.n - a.n; });
+  POSTS_READY = true;
+  render();
+  tryApplyTopics();
+}
+
+/* ── загрузка данных: мгновенный старт из кэша + тихое обновление ──
+   posts.json после каждой успешной загрузки сохраняется в localStorage:
+   на медленной сети оглавление открывается мгновенно (сохранённая копия),
+   затем тихо обновляется; без сети показывается копия. */
+var CACHE_KEY = 'sz_posts_v1';
+function cacheRead(){
+  try {
+    var o = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    return (o && typeof o.raw === 'string') ? o : null;
+  } catch(e){ return null; }
+}
+function stampFresh(t){
+  if (!t) return;
+  var el = document.getElementById('fresh');
+  if (!el){
+    el = document.createElement('div');
+    el.className = 'lic'; el.id = 'fresh';
+    var f = document.querySelector('footer');
+    if (f) f.insertBefore(el, document.getElementById('licLine'));
+  }
+  var d = new Date(t), z = function(x){ return ('0' + x).slice(-2); };
+  el.textContent = 'data updated: ' + z(d.getDate()) + '.' + z(d.getMonth() + 1) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
+}
+function bootFromCache(){
+  var cached = cacheRead();
+  if (!cached) return null;
+  try {
+    var cd = JSON.parse(cached.raw);
+    var cn = Array.isArray(cd) ? cd.length : ((cd && cd.posts) ? cd.posts.length : 0);
+    if (cn) { boot(cd); stampFresh(cached.t); }   // пустой кэш не показываем — пусть решает сеть
+    return cached;
+  } catch(e){ return null; }
+}
+function load(){
+  if (!_szBrandOK()) _szBrandStop();   /* авторство: без блока «о нас» данные не грузим */
+  var cached = bootFromCache();
+  fetch('posts.json?v=' + Date.now(), {cache:'no-store'})
+    .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+    .then(function(txt){
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({t: Date.now(), raw: txt})); } catch(e){}
+      if (cached && txt === cached.raw){ stampFresh(Date.now()); return; }   // данные не изменились
+      boot(JSON.parse(txt));
+      stampFresh(Date.now());
+    })
+    .catch(function(e){
+      if (!POSTS_READY) renderState('error', 'posts.json is unavailable or empty. Check the configuration per the guide (' + e.message + ').');
+    });
+}
+
+/* ── старт ── */
+applyConfig();
+wireTgBack();
+diagInit();
+maybeBridgeBanner();
+
+/* кнопка «Поделиться»: копирует ссылку на этот мини-апп */
+document.getElementById('hShare').addEventListener('click', function(){
+  haptic('light');
+  var http = location.protocol === 'http:' || location.protocol === 'https:';
+  var url = http ? (location.origin + location.pathname) : (cfg.channel_url || location.href);
+  copyText(url, function(ok){
+    if (ok){ hapticNotify('success'); toast('Table of contents link copied'); }
+    else { hapticNotify('error'); toast('Failed to copy the link'); }
+  });
+});
+
+licenseValid(cfg.licensee, cfg.license_key).then(function(ok){
+  if (!_szBrandOK()) _szBrandStop();   /* дубль-проверка авторства: вырезание одной проверки не спасает */
+  if (!ok){
+    var b = document.getElementById('banner');
+    b.style.display = 'block';
+    b.textContent = 'License key not verified. Demo mode is active — enter the correct details in config.js or contact the seller.';
+  }
+});
+
+/* ── статус лицензии у продавца (Task 170): «отозвана» → заглушка; сбой сети не блокирует ── */
+(function(){
+  var LIC_API = 'https://sales-bot-private.onrender.com/lic';
+  if (!cfg.license_id) return;
+  fetch(LIC_API + '?lic_id=' + encodeURIComponent(cfg.license_id)
+        + '&licensee=' + encodeURIComponent(cfg.licensee || ''),
+        {cache: 'no-store'})
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(j){
+      if (!j || j.status !== 'revoked') return;
+      var ov = document.createElement('div');
+      ov.setAttribute('style', 'position:fixed;left:0;top:0;right:0;bottom:0;'
+        + 'z-index:99999;background:#F3F7FD;display:flex;align-items:center;'
+        + 'justify-content:center;padding:24px');
+      ov.innerHTML = '<div style="background:#fff;border-radius:24px;'
+        + 'box-shadow:0 12px 40px rgba(42,171,238,.14);padding:40px 32px;'
+        + 'max-width:430px;text-align:center;'
+        + "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif\">"
+        + '<div style="width:64px;height:64px;border-radius:50%;margin:0 auto 18px;'
+        + 'background:linear-gradient(135deg,#2AABEE,#7C6CFF);display:flex;'
+        + 'align-items:center;justify-content:center">'
+        + '<svg width="30" height="30" viewBox="0 0 24 24" fill="none">'
+        + '<path d="M7 10V8a5 5 0 0 1 10 0v2h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V8a3 3 0 0 0-6 0v2Z" fill="#fff"/></svg></div>'
+        + '<h1 style="font-size:20px;color:#0F2437;margin:0 0 10px">Table of contents unavailable</h1>'
+        + '<p style="font-size:15px;line-height:1.55;color:#48607A;margin:0">'
+        + 'Access has been revoked: the license was withdrawn by the seller.<br>'
+        + 'To restore it, write to the chat of the bot you opened this page from.</p>'
+        + '</div>';
+      document.body.appendChild(ov);
+    })
+    .catch(function(){});
+})();
+
+load();
+loadTopics();
+})();
+</script>
+<script>
+/* SZ-CAB main (Task 129/130) — личный кабинет клиента: экран поверх витрины.
+   Данные: POST https://sales-bot-private.onrender.com/api/cabinet с initData — подпись проверяет сервер
+   (main.verify_init_data, официальная схема Telegram). Кабинет только читает:
+   автосписаний нет, все кнопки оплаты ведут в бота (t.me), страница
+   оглавления открывается нативно. Язык: ?cablang= → язык Telegram-аккаунта.
+   Task 130 (вторая очередь): лицензии продуктовой ветки, глубокая история
+   оплат (итог ⭐ и счётчик, до 30 записей), «рассказать друзьям» и
+   «скопировать сводку» (буфер обмена с фолбэком + тост). */
+(function () {
+  if (!window.__TOC_CABINET) return;
+  var API = 'https://sales-bot-private.onrender.com';
+  var w = window.Telegram && window.Telegram.WebApp;
+  var tgUser = (w && w.initDataUnsafe && w.initDataUnsafe.user) || {};
+  /* Task 132: токен кабинета из startapp (_cab_<uid>_<exp>_<sig>) — путь для
+     контекстов без моста Telegram (initData пуст): браузерный фолбэк
+     Direct-Link, старые клиенты. Если есть и initData, и токен — initData
+     основной (там настоящее имя). */
+  var cabTok = '';
+  var cabTokLang = '';   /* Task 161: язык бота хвостом startapp (_ru/_en) */
+  (function () {
+    var sp = String(window.__TOC_STARTPARAM || '');
+    if (sp.indexOf('_cab_') !== 0) return;
+    cabTok = sp.slice(5);
+    var lm = /_(ru|en)$/.exec(cabTok);
+    if (lm) { cabTokLang = lm[1]; cabTok = cabTok.slice(0, lm.index); }
+  })();
+  var qLang = '';
+  try { qLang = new URLSearchParams(location.search).get('cablang') || ''; } catch (e) {}
+  var navLang = '';
+  try { navLang = String(navigator.language || navigator.userLanguage || ''); } catch (e) {}
+  var L = (qLang === 'ru' || qLang === 'en') ? qLang
+    : (cabTokLang || (String(tgUser.language_code || '').toLowerCase().indexOf('ru') === 0 ? 'ru'
+    : (navLang.toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en')));
+  var TXT = ({
+    ru: {
+      no_sub_t: 'Пока нет подключений',
+      no_sub_m: 'Откройте бота — там можно подключить свой канал: 7 дней бесплатно, оглавление собираем мы.',
+      prep_t: 'Готовим оглавление',
+      prep_m: 'Бот принят в канал, каталог собирается автоматически — обычно до получаса. Сообщение придёт само.',
+      trial_t: 'Пробный период',
+      paid_t: 'Подписка активна',
+      ended_t: 'Подписка истекла',
+      ended_m: 'Обновления встали на паузу, каталог показывает вежливую заглушку. Все данные сохранены 90 дней — продлите месяц, и страница оживёт за пару минут.',
+      susp_t: 'Бота нет в канале',
+      susp_m: 'Верните бота администратором канала — оглавление пересоберётся и кнопка вернётся сами. Оплаченные дни не сгорают.',
+      del_t: 'Подключение удалено',
+      del_m: 'Страница снята. Вернуть обслуживание можно оплатой месяца — откройте бота.',
+      trial_hint: 'Дальше — ⭐{p}/мес. Автосписаний нет: продлевать будете только сами.',
+      paid_hint: 'Автосписаний нет: следующий месяц подключается только явной оплатой.',
+      open_toc: '📖 Открыть оглавление',
+      hist: 'История оплат',
+      hist_empty: 'Оплаты появятся здесь после первого продления.',
+      with_us: 'с нами с {d}',
+      months: 'оплачено месяцев: {n}',
+      noauto: 'Автосписаний нет — месяц продлевается только вашим платежом.',
+      err_t: 'Кабинет не загрузился',
+      err_m: 'Проверьте связь и попробуйте ещё раз. Статус подписки всегда доступен и в боте.',
+      ctx_t: 'Кабинет открывается из бота',
+      ctx_m: 'Эта ссылка открыта вне Telegram. Откройте бота и нажмите кнопку «Личный кабинет» (или пришлите /cabinet) — кабинет откроется сам.',
+      stale_t: 'Сессия кабинета устарела',
+      stale_m: 'Нажмите «Повторить». Если не помогло — откройте бота и снова нажмите кнопку «Личный кабинет».',
+      retry: 'Повторить',
+      hello: 'Здравствуйте, {n}!',
+      lic: 'Комплекты и лицензии',
+      lic_fresh: 'актуальная',
+      lic_upd: 'есть обновление v{v} — пришлите /update в боте',
+      hist_meta: 'всего {n}⭐ · платежей: {k}',
+      hist_more: 'показаны последние {n} из {m}',
+      share: '📤 Рассказать друзьям',
+      share_txt: 'Оглавление для Telegram-канала — 7 дней бесплатно:',
+      copy: '📋 Скопировать сводку',
+      copied: 'Сводка скопирована',
+      copy_fail: 'Не получилось скопировать',
+      exp_t: 'Личный кабинет',
+      exp_none: 'Подключений пока нет',
+      ref_t: 'Партнёрка',
+      ref_stats: 'Приглашено: {a} · оплатили: {k} · наград: {r}',
+      ref_tier: 'Уровень {t} · до следующего уровня: {n} оплативших',
+      ref_tier_max: 'Уровень {t} — максимальный',
+      ref_coupons: 'Ваши купоны-награды',
+      ref_coupon: '{code} · −{p}% · до {d}',
+      ref_invites: 'Последние приглашения',
+      ref_st_registered: 'приглашён',
+      ref_st_trial: 'оформил триал',
+      ref_st_paid: 'оплатил',
+      ref_share: '📤 Поделиться ссылкой',
+      ref_share_txt: 'Поставил своему каналу «Оглавление» — каталог всего архива в шапке. Тебе +7 дней триала по ссылке:',
+      ref_copy: '📋 Скопировать ссылку',
+      ref_copied: 'Ссылка скопирована',
+      tab_main: 'Кабинет',
+      tab_ref: 'Реферальная программа',
+      tab_extra: 'Доп. услуги',
+      extra_p1: 'Кастомизация не входит ни в один тариф: каталог собирается автоматически — рубрики, месяцы, форматы — и устроен одинаково для всех. Так он стабилен и бесплатно получает обновления.',
+      extra_p2: 'Если нужна разработка под личные нужды или уникальный дизайн — такая работа выполняется отдельно и оплачивается по договорённости: напишите о задаче, обсудим сроки и стоимость.',
+      extra_c2a: '💬 Обсудить задачу',
+      ref_link_l: 'Твоя ссылка',
+      ref_funnel_t: 'Твоя воронка',
+      ref_clicks_l: 'Переходы по ссылке',
+      ref_invited_l: 'Приглашено',
+      ref_trials_l: 'Оформили триал',
+      ref_paid_l: 'Оплатили',
+      ref_rewards_l: 'Наград получено',
+      ref_pending_l: 'Наград ждут решения',
+      ref_empty: 'Данных пока нет — отправь кому-нибудь свою ссылку, отсчёт пойдёт с первого перехода.',
+      ref_adm_t: 'Общая сводка · владелец',
+      ref_adm_hint: 'те же цифры, что /refstats в боте',
+      ref_adm_7d: '7 дней',
+      ref_adm_30d: '30 дней',
+      ref_adm_line: 'кликов {c} · рег. {r} · триалов {t} · оплат {p} · наград {g} · отмен {x}',
+      ref_adm_conv: 'Конверсия регистрация → оплата',
+      ref_adm_top: 'Топ реферреров (по оплатившим)',
+      ref_adm_top_row: 'id {id} — {k} оплативших',
+      ref_adm_review: 'Ждут ручного ревью',
+      ref_adm_granted_t: 'Наград выдано всего',
+      ref_btn: '↩️ Возврат (14 дней)',
+      ref_last: 'последний день',
+      ref_left: 'осталось {n} дн.',
+      ref_sent: '✅ Заявка открыта — подтверждение ждёт в чате бота',
+      ref_err_window: '⏳ Срок возврата (14 дней) истёк.',
+      ref_err_already: 'Этот платёж уже возвращён.',
+      ref_err_premium: '👑 По этой покупке возврат оформляет владелец лично.',
+      ref_err_stale: 'Кнопка устарела — обновите кабинет.',
+      ref_err_auth: 'Сессия устарела — откройте кабинет заново из бота.',
+      ref_err_server: 'Не получилось — попробуйте ещё раз чуть позже.'
+    },
+    en: {
+      no_sub_t: 'No connections yet',
+      no_sub_m: 'Open the bot to connect your channel: 7 days free, we build the table of contents for you.',
+      prep_t: 'Preparing the contents',
+      prep_m: 'The bot is in the channel, the catalog is being built automatically — usually under 30 minutes. A message will arrive on its own.',
+      trial_t: 'Trial period',
+      paid_t: 'Subscription active',
+      ended_t: 'Subscription expired',
+      ended_m: 'Updates are paused and the catalog shows a polite placeholder. All data is kept for 90 days — renew for a month and the page revives within minutes.',
+      susp_t: 'The bot is not in the channel',
+      susp_m: 'Add the bot back as a channel administrator — the contents rebuild and the button post return on their own. Paid days are not lost.',
+      del_t: 'Connection deleted',
+      del_m: 'The page has been taken down. Service can be restored by paying for a month — open the bot.',
+      trial_hint: 'Then ⭐{p}/mo. No auto-charges: you only ever renew it yourself.',
+      paid_hint: 'No auto-charges: the next month is added only by an explicit payment.',
+      open_toc: '📖 Open the table of contents',
+      hist: 'Payment history',
+      hist_empty: 'Payments will appear here after the first renewal.',
+      with_us: 'with us since {d}',
+      months: 'months paid: {n}',
+      noauto: 'No auto-charges — a month is renewed only by your payment.',
+      err_t: 'The account screen did not load',
+      err_m: 'Check your connection and try again. The subscription status is always available in the bot too.',
+      ctx_t: 'Open the account from the bot',
+      ctx_m: 'This link was opened outside Telegram. Open the bot and tap “My account” (or send /cabinet) — the account screen will open on its own.',
+      stale_t: 'Account session expired',
+      stale_m: 'Tap “Retry” first. If that does not help, open the bot and tap “My account” again.',
+      retry: 'Retry',
+      hello: 'Hello, {n}!',
+      lic: 'Kits and licenses',
+      lic_fresh: 'up to date',
+      lic_upd: 'update to v{v} is ready — send /update in the bot',
+      hist_meta: 'total {n}⭐ · {k} payments',
+      hist_more: 'showing the last {n} of {m}',
+      share: '📤 Tell your friends',
+      share_txt: 'A table of contents for your Telegram channel — 7 days free:',
+      copy: '📋 Copy summary',
+      copied: 'Summary copied',
+      copy_fail: 'Could not copy',
+      exp_t: 'My account',
+      exp_none: 'No connections yet',
+      ref_t: 'Referrals',
+      ref_stats: 'Invited: {a} · paid: {k} · rewards: {r}',
+      ref_tier: 'Level {t} · {n} paying referrals to the next level',
+      ref_tier_max: 'Level {t} — maximum',
+      ref_coupons: 'Your reward coupons',
+      ref_coupon: '{code} · −{p}% · until {d}',
+      ref_invites: 'Recent invites',
+      ref_st_registered: 'invited',
+      ref_st_trial: 'trial started',
+      ref_st_paid: 'paid',
+      ref_share: '📤 Share the link',
+      ref_share_txt: 'I set up "Table of Contents" for my channel — the whole archive in a pinned button. You get +7 trial days with this link:',
+      ref_copy: '📋 Copy the link',
+      ref_copied: 'Link copied',
+      tab_main: 'Account',
+      tab_ref: 'Referral program',
+      tab_extra: 'Add-ons',
+      extra_p1: 'Custom work is not part of any plan: the catalog is assembled automatically — topics, months, formats — and works the same for everyone. That keeps it stable and updates free.',
+      extra_p2: 'Need development for your own needs or a unique design? Such work is done separately and paid by agreement: tell us about the task and we will discuss the timing and the price.',
+      extra_c2a: '💬 Discuss a task',
+      ref_link_l: 'Your link',
+      ref_funnel_t: 'Your funnel',
+      ref_clicks_l: 'Link visits',
+      ref_invited_l: 'Invited',
+      ref_trials_l: 'Trials started',
+      ref_paid_l: 'Paid',
+      ref_rewards_l: 'Rewards earned',
+      ref_pending_l: 'Rewards pending',
+      ref_empty: 'No data yet — share your referral link; the count starts with the first visit.',
+      ref_adm_t: 'Owner summary',
+      ref_adm_hint: 'same numbers as /refstats in the bot',
+      ref_adm_7d: '7 days',
+      ref_adm_30d: '30 days',
+      ref_adm_line: 'clicks {c} · reg {r} · trials {t} · paid {p} · rewards {g} · revoked {x}',
+      ref_adm_conv: 'Registration → payment conversion',
+      ref_adm_top: 'Top referrers (by paid)',
+      ref_adm_top_row: 'id {id} — {k} paid',
+      ref_adm_review: 'Awaiting manual review',
+      ref_adm_granted_t: 'Total rewards granted',
+      ref_btn: '↩️ Refund (14 days)',
+      ref_last: 'last day',
+      ref_left: '{n} d left',
+      ref_sent: '✅ Request opened — the confirmation is waiting in the bot chat',
+      ref_err_window: '⏳ The 14-day refund window has passed.',
+      ref_err_already: 'This payment has already been refunded.',
+      ref_err_premium: '👑 Refunds for this purchase are handled by the owner personally.',
+      ref_err_stale: 'This button is stale — refresh the account screen.',
+      ref_err_auth: 'Session expired — reopen the account from the bot.',
+      ref_err_server: 'Didn’t work — please try again shortly.'
+    }
+  })[L];
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function pluralRu(n, one, few, many) {
+    var m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+    return many;
+  }
+  function daysLine(d, date) {
+    var left;
+    if (!d || d <= 0) left = (L === 'ru') ? 'срок истёк' : 'the term has ended';
+    else if (L === 'ru') left = (d === 1) ? 'остался 1 день'
+      : 'осталось ' + d + ' ' + pluralRu(d, 'день', 'дня', 'дней');
+    else left = (d === 1) ? '1 day left' : d + ' days left';
+    return date ? left + (L === 'ru' ? ' · до ' : ' · until ') + date : left;
+  }
+  function haptic(kind) {
+    try { if (w && w.HapticFeedback) w.HapticFeedback.impactOccurred(kind || 'light'); } catch (e) {}
+  }
+  try { if (w && w.expand) w.expand(); } catch (e) {}
+  var dark = false;
+  try { dark = !!(w && w.colorScheme === 'dark'); } catch (e) {}
+  var BG = dark ? '#0E1624' : '#F3F7FD', FG = dark ? '#E9EFF9' : '#0D1B2E';
+  var CARD = dark ? '#16202F' : '#FFFFFF', LINE = dark ? '#263449' : '#DCE6F3';
+  var ACC = dark ? '#6FD0FF' : '#0E68A8';
+  try { if (w && w.setHeaderColor) w.setHeaderColor(BG); } catch (e) {}
+  try { if (w && w.setBackgroundColor) w.setBackgroundColor(BG); } catch (e) {}
+  var ov = document.createElement('div');
+  ov.id = 'sz-cab';
+  ov.setAttribute('style', 'position:fixed;left:0;top:0;right:0;bottom:0;z-index:99999;'
+    + 'overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;margin:0;'
+    + 'background:' + BG + ';color:' + FG + ';'
+    + 'font-family:\'Manrope\',-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;'
+    + 'font-size:16px;line-height:1.45;');
+  document.body.appendChild(ov);
+  var PAD = 'padding:calc(env(safe-area-inset-top,0px) + 18px) 16px '
+    + 'calc(env(safe-area-inset-bottom,0px) + 26px);max-width:480px;margin:0 auto;';
+  function btn(href, label, primary) {
+    return '<a href="' + esc(href) + '" data-ext="1" style="display:block;'
+      + 'text-decoration:none;text-align:center;margin:10px 0;padding:13px 14px;'
+      + 'border-radius:12px;' + (primary
+        ? 'background:linear-gradient(135deg,#2AABEE 0%,#7C6CFF 100%);color:#fff;font-weight:700;box-shadow:0 6px 18px rgba(42,171,238,.30);'
+        : 'background:' + CARD + ';color:inherit;')
+      + '">' + esc(label) + '</a>';
+  }
+  function para(html) {
+    return '<div style="font-size:15px;opacity:.85;margin:8px 0">' + html + '</div>';
+  }
+  function bar(tone) {
+    return '<div style="width:44px;height:5px;border-radius:3px;background:' + tone
+      + ';margin:2px 0 14px"></div>';
+  }
+  /* Task 191: кнопка «↩️ Возврат» у покупки в окне 14 дней («нет кнопки —
+     нет возврата»). Сервер сам решает, показывать ли кнопку (payload отдаёт
+     refund только живым покупкам в окне); нажатие → POST /api/refund_request,
+     бот заново определяет статус покупки по журналу и открывает СУЩЕСТВУЮЩИЙ
+     флоу (подтверждение в чате → диагностика → решение владельца). */
+  function rfHint(rf) {
+    var d = (rf && rf.days_left) || 0;
+    return d > 0 ? TXT.ref_left.replace('{n}', String(d)) : TXT.ref_last;
+  }
+  function refBtnHtml(rf, inner) {
+    return '<a href="#" data-rf="' + esc(String(rf.token)) + '" style="display:block;'
+      + 'text-decoration:none;text-align:center;margin:' + (inner ? '8px 0 2px' : '10px 0 2px')
+      + ';padding:' + (inner ? '9px 12px' : '11px 14px') + ';border-radius:' + (inner ? '10px' : '12px')
+      + ';background:' + CARD + ';color:inherit;font-size:' + (inner ? '13.5px' : '14px')
+      + ';box-shadow:inset 0 0 0 1px ' + LINE + '">'
+      + esc(TXT.ref_btn) + ' · ' + esc(rfHint(rf)) + '</a>';
+  }
+  /* Task 130: тост — короткое подтверждение внизу экрана (копирование). */
+  function toast(msg) {
+    try {
+      var el = document.createElement('div');
+      el.setAttribute('style', 'position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);'
+        + 'transform:translateX(-50%);background:' + FG + ';color:' + BG + ';'
+        + 'padding:10px 18px;border-radius:12px;font-size:14px;z-index:100000;'
+        + 'opacity:0;transition:opacity .25s;max-width:86%;text-align:center');
+      el.textContent = msg;
+      document.body.appendChild(el);
+      setTimeout(function () { el.style.opacity = '1'; }, 30);
+      setTimeout(function () { el.style.opacity = '0'; }, 1900);
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 2400);
+    } catch (e) {}
+  }
+  /* Task 130: буфер обмена — штатный API с фолбэком на скрытую textarea
+     (старые webview не дают clipboard без разрешения). */
+  function copyText(s, cb) {
+    function fallback(t) {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = t;
+        ta.setAttribute('style', 'position:fixed;left:-9999px;top:0');
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, t.length);
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e) { return false; }
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(s).then(function () { cb(true); },
+          function () { cb(fallback(s)); });
+        return;
+      }
+    } catch (e) {}
+    cb(fallback(s));
+  }
+  function stTitle(st, sub) {
+    if (!sub.has) return TXT.no_sub_t;
+    if (st === 'pending_admin' || st === 'pending_build') return TXT.prep_t;
+    if (st === 'trial') return TXT.trial_t;
+    if (st === 'paid' && sub.paid_active) return TXT.paid_t;
+    if (st === 'suspended') return TXT.susp_t;
+    if (st === 'ended') return TXT.ended_t;
+    if (st === 'deleted') return TXT.del_t;
+    return TXT.prep_t;
+  }
+  /* Task 130: текстовая сводка кабинета — то, что уходит в буфер по кнопке. */
+  function summaryText(d) {
+    var sub = d.sub || {};
+    var lines = [TXT.exp_t];
+    if (!sub.has) {
+      lines.push(TXT.exp_none);
+    } else {
+      lines.push(stTitle(sub.status || '', sub)
+        + (sub.channel ? ' · @' + sub.channel : ''));
+      if (sub.status === 'trial' || sub.status === 'paid') {
+        lines.push(daysLine(sub.days_left || 0, sub.ends_str));
+        if (sub.months) lines.push(TXT.months.replace('{n}', String(sub.months)));
+      }
+      if (sub.log_total) lines.push(TXT.hist_meta
+        .replace('{n}', String(sub.paid_total || 0))
+        .replace('{k}', String(sub.log_total)));
+    }
+    var items = (d.lic && d.lic.items) || [];
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      lines.push('• ' + it.tier + ' · № ' + it.lic_id + ' · ' + it.branch
+        + ' · v' + it.ver + ' — '
+        + (it.fresh ? TXT.lic_fresh
+          : TXT.lic_upd.replace('{v}', String((d.lic && d.lic.cur) || ''))));
+    }
+    if (d.bot_link) lines.push(d.bot_link);
+    return lines.join('\n');
+  }
+  /* Task 147: две вкладки кабинета — «Кабинет» и «Реферальная программа».
+     Вкладка живёт до перезагрузки данных; переключение перерисовывает экран
+     из уже полученного payload — без повторного fetch. */
+  var CAB_TAB = 'main';
+  /* Task 163: кнопки, ведущие в чат ТОГО ЖЕ бота («Открыть бота»,
+     «Продлить месяц», «Выбор награды»), убраны СОВСЕМ. Диагноз босса
+     (v58–v61 не помогли, проверено на живом iPhone): если в фоне открыт
+     ИНОЙ чат — openTelegramLink переход делает; если в фоне ХОСТ-чат
+     миниаппа (наш бот, единственный реальный сценарий кабинета) —
+     видимого перехода нет НИКОГДА, это поведение клиента, из JS оно
+     не лечится ни openTelegramLink, ни close()/openLink/location.href
+     из таймеров. Мёртвая кнопка смущает пользователей — вместо неё
+     честный текст-подсказка; до бота один свайп вниз, кабинет и так
+     открыт из чата бота. Остались только реально работающие ссылки:
+     share (диалог), поддержка (чужой чат), direct-ссылка миниаппа
+     оглавления (экран меняется). */
+  function tabbar() {
+    var base = 'flex:1;text-align:center;text-decoration:none;padding:11px 4px;'
+      + 'border-radius:11px;font-size:14px;font-weight:600;line-height:1.25;';
+    var on = base + 'background:' + ACC + ';color:#fffdf8;';
+    var off = base + 'background:' + CARD + ';color:inherit;';
+    return '<div style="display:flex;gap:8px;margin:14px 0 6px">'
+      + '<a href="#" id="szc-tab-main" style="' + (CAB_TAB === 'main' ? on : off)
+      + '">' + esc(TXT.tab_main) + '</a>'
+      + '<a href="#" id="szc-tab-ref" style="' + (CAB_TAB === 'ref' ? on : off)
+      + '">' + esc(TXT.tab_ref) + '</a>'
+      + '<a href="#" id="szc-tab-extra" style="' + (CAB_TAB === 'extra' ? on : off)
+      + '">' + esc(TXT.tab_extra) + '</a></div>';
+  }
+  function render(d) {
+    ov.innerHTML = (CAB_TAB === 'ref') ? refBody(d)
+      : (CAB_TAB === 'extra') ? extraBody(d) : mainBody(d);
+    var cp = document.getElementById('szc-copy');
+    if (cp) cp.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      haptic('light');
+      copyText(summaryText(d), function (ok) { toast(ok ? TXT.copied : TXT.copy_fail); });
+    });
+    var rcp2 = document.getElementById('szc-refcopy');
+    if (rcp2) rcp2.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      haptic('light');
+      copyText((d.ref && d.ref.link) || '', function (ok) {
+        toast(ok ? TXT.ref_copied : TXT.copy_fail);
+      });
+    });
+    var tabs = [document.getElementById('szc-tab-main'),
+                document.getElementById('szc-tab-ref'),
+                document.getElementById('szc-tab-extra')];
+    for (var ti = 0; ti < tabs.length; ti++) {
+      if (tabs[ti]) tabs[ti].addEventListener('click', function (ev) {
+        ev.preventDefault();
+        var id = (ev.currentTarget && ev.currentTarget.id) || '';
+        var t = (id === 'szc-tab-ref') ? 'ref'
+          : (id === 'szc-tab-extra') ? 'extra' : 'main';
+        if (CAB_TAB !== t) { CAB_TAB = t; haptic('light'); render(d); }
+      });
+    }
+  }
+  function mainBody(d) {
+    var sub = d.sub || {};
+    var p = d.price || 0;
+    var st = sub.status || '';
+    var b = ['<div style="' + PAD + '">'];
+    if (d.user && d.user.name) {
+      b.push('<div style="font-size:15px;opacity:.65;margin-bottom:14px">'
+        + esc(TXT.hello.replace('{n}', d.user.name)) + '</div>');
+    }
+    b.push(tabbar());
+    var tone = '#8a7f68', title = '', body = '';
+    var rows = [];
+    if (!sub.has) {
+      title = TXT.no_sub_t; body = TXT.no_sub_m;
+    } else if (st === 'pending_admin' || st === 'pending_build') {
+      title = TXT.prep_t; body = TXT.prep_m; tone = dark ? '#93A3BC' : '#6b7a8f';
+    } else if (st === 'trial') {
+      title = TXT.trial_t; tone = ACC;
+      body = TXT.trial_hint.replace('{p}', p);
+      if (d.app_link) rows.push([d.app_link, TXT.open_toc]);
+    } else if (st === 'paid' && sub.paid_active) {
+      title = TXT.paid_t; tone = dark ? '#34D399' : '#15803D';
+      body = TXT.paid_hint;
+      if (d.app_link) rows.push([d.app_link, TXT.open_toc]);
+    } else if (st === 'suspended') {
+      title = TXT.susp_t; body = TXT.susp_m; tone = dark ? '#FBBF24' : '#B45309';
+    } else if (st === 'ended') {
+      title = TXT.ended_t; body = TXT.ended_m; tone = dark ? '#F87171' : '#B3264C';
+    } else if (st === 'deleted') {
+      title = TXT.del_t; body = TXT.del_m;
+    }
+    b.push(bar(tone));
+    b.push('<div style="font-size:23px;font-weight:700;letter-spacing:.2px">' + title + '</div>');
+    if (sub.channel) {
+      b.push('<div style="font-size:15px;font-weight:600;margin:8px 0 2px">'
+        + '@' + esc(sub.channel) + (sub.title ? ' · ' + esc(sub.title) : '') + '</div>');
+    }
+    if (st === 'trial' || st === 'paid') {
+      b.push('<div style="font-size:15px;margin:6px 0 2px;opacity:.85">'
+        + esc(daysLine(sub.days_left || 0, sub.ends_str)) + '</div>');
+      var meta = [];
+      if (sub.started_str) meta.push(TXT.with_us.replace('{d}', sub.started_str));
+      if (sub.months) meta.push(TXT.months.replace('{n}', sub.months));
+      if (meta.length) b.push(para(esc(meta.join(' · '))));
+    }
+    if (body) b.push(para(esc(body)));
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i][0]) b.push(btn(rows[i][0], rows[i][1], false));
+    }
+    if (sub.has) {
+      b.push('<div style="font-size:15px;font-weight:600;margin:22px 0 2px">'
+        + esc(TXT.hist) + '</div>');
+      if (sub.log_total) {
+        b.push('<div style="font-size:13px;opacity:.65;margin:0 0 4px">'
+          + esc(TXT.hist_meta.replace('{n}', String(sub.paid_total || 0))
+            .replace('{k}', String(sub.log_total))) + '</div>');
+      }
+      if (sub.log && sub.log.length) {
+        for (var j = sub.log.length - 1; j >= 0; j--) {
+          b.push('<div style="display:flex;justify-content:space-between;gap:12px;'
+            + 'padding:9px 0;border-bottom:1px solid ' + LINE + ';font-size:14px">'
+            + '<span style="opacity:.7;white-space:nowrap">' + esc(sub.log[j].d) + '</span>'
+            + '<span style="text-align:right">' + esc(sub.log[j].label) + '</span></div>');
+        }
+        if (sub.log_total > sub.log.length) {
+          b.push('<div style="font-size:13px;opacity:.6;margin-top:6px">'
+            + esc(TXT.hist_more.replace('{n}', String(sub.log.length))
+              .replace('{m}', String(sub.log_total))) + '</div>');
+        }
+      } else {
+        b.push('<div style="font-size:14px;opacity:.6">' + esc(TXT.hist_empty) + '</div>');
+      }
+      /* Task 191: возврат последнего подписочного платежа — кнопка под историей
+         оплат; видна только пока платёж в окне 14 дней (решает сервер). */
+      if (sub.refund && sub.refund.token) b.push(refBtnHtml(sub.refund, false));
+    }
+    /* Task 130: лицензии продуктовой ветки — те же данные, что «Проверить
+       свою лицензию» в боте; без лицензий блок не показывается вовсе. */
+    var licItems = (d.lic && d.lic.items) || [];
+    if (licItems.length) {
+      b.push('<div style="font-size:15px;font-weight:600;margin:22px 0 4px">'
+        + esc(TXT.lic) + '</div>');
+      for (var k = 0; k < licItems.length; k++) {
+        var it = licItems[k];
+        var rfHtml = it.refund ? refBtnHtml(it.refund, true) : '';
+        b.push('<div style="padding:9px 0;border-bottom:1px solid ' + LINE + ';font-size:14px">'
+          + '<div>' + esc(it.tier) + '</div>'
+          + '<div style="opacity:.75;margin-top:2px">№ ' + esc(it.lic_id)
+          + ' · ' + esc(it.branch) + ' · v' + esc(it.ver) + '</div>'
+          + '<div style="margin-top:2px;font-size:13px;color:'
+          + (it.fresh ? (dark ? '#34D399' : '#15803D') : ACC) + '">'
+          + esc(it.fresh ? TXT.lic_fresh
+            : TXT.lic_upd.replace('{v}', String((d.lic && d.lic.cur) || '')))
+          + '</div>' + rfHtml + '</div>');
+      }
+    }
+    /* Task 147: блок «Партнёрка» переехал в отдельную вкладку (refBody) —
+       главный экран остаётся про статус, историю, лицензии и акции. */
+    /* Task 130: поделиться ботом и скопировать текстовую сводку. */
+    if (d.bot_link) {
+      b.push(btn('https://t.me/share/url?url=' + encodeURIComponent(d.bot_link)
+        + '&text=' + encodeURIComponent(TXT.share_txt), TXT.share, false));
+    }
+    b.push('<a href="#" id="szc-copy" style="display:block;text-decoration:none;'
+      + 'text-align:center;margin:10px 0;padding:13px 14px;border-radius:12px;'
+      + 'background:' + CARD + ';color:inherit">' + esc(TXT.copy) + '</a>');
+    b.push('<div style="font-size:13px;opacity:.55;margin-top:22px">' + esc(TXT.noauto) + '</div>');
+    /* Task 189: строка «Поддержка: @…» убрана из главного таба — контакт только
+       через кнопку (вкладка «Доп. услуги»), чтобы владельцу не писали по любому поводу. */
+    b.push('</div>');
+    return b.join('');
+  }
+  /* Task 147: вкладка «Реферальная программа» — персональная ссылка, полная
+     воронка (переходы → приглашено → триалы → оплаты → награды), тир,
+     купоны-награды, приглашения; владельцу — общая сводка (/refstats).
+     Пустой d.ref → честный пустой экран, кабинет не падает. */
+  function refBody(d) {
+    var rf = (d && d.ref) || null;
+    var b = ['<div style="' + PAD + '">'];
+    if (d.user && d.user.name) {
+      b.push('<div style="font-size:15px;opacity:.65;margin-bottom:14px">'
+        + esc(TXT.hello.replace('{n}', d.user.name)) + '</div>');
+    }
+    b.push(tabbar());
+    b.push('<div style="font-size:23px;font-weight:700;letter-spacing:.2px">'
+      + esc(TXT.tab_ref) + '</div>');
+    if (!rf || !rf.link) {
+      b.push(para(esc(TXT.ref_empty)));
+      b.push('</div>');
+      return b.join('');
+    }
+    b.push('<div style="font-size:15px;font-weight:600;margin:14px 0 4px">'
+      + esc(TXT.ref_link_l) + '</div>');
+    b.push('<div style="background:' + CARD + ';border-radius:12px;padding:12px 14px;'
+      + 'font-size:13px;word-break:break-all;font-family:ui-monospace,Menlo,monospace">'
+      + esc(rf.link) + '</div>');
+    b.push('<div style="font-size:15px;font-weight:600;margin:20px 0 2px">'
+      + esc(TXT.ref_funnel_t) + '</div>');
+    var fn = [[TXT.ref_clicks_l, rf.clicks], [TXT.ref_invited_l, rf.invited],
+              [TXT.ref_trials_l, rf.trials], [TXT.ref_paid_l, rf.paid],
+              [TXT.ref_rewards_l, rf.rewards], [TXT.ref_pending_l, rf.pending]];
+    var anyData = false;
+    for (var fi = 0; fi < fn.length; fi++) {
+      anyData = anyData || (fn[fi][1] > 0);
+      b.push('<div style="display:flex;justify-content:space-between;gap:12px;'
+        + 'padding:9px 0;border-bottom:1px solid ' + LINE + ';font-size:14px">'
+        + '<span style="opacity:.75">' + esc(fn[fi][0]) + '</span>'
+        + '<span style="font-weight:600">' + esc(String(fn[fi][1] || 0)) + '</span></div>');
+    }
+    if (!anyData) b.push('<div style="font-size:13px;opacity:.6;margin-top:8px">'
+      + esc(TXT.ref_empty) + '</div>');
+    b.push('<div style="font-size:13px;color:' + ACC + ';margin-top:10px">'
+      + esc((rf.next_left ? TXT.ref_tier : TXT.ref_tier_max)
+        .replace('{t}', String(rf.tier || 1))
+        .replace('{n}', String(rf.next_left || 0))) + '</div>');
+    var rcp = rf.coupons || [];
+    if (rcp.length) {
+      b.push('<div style="font-size:14px;font-weight:600;margin-top:10px">'
+        + esc(TXT.ref_coupons) + '</div>');
+      for (var rcq = 0; rcq < rcp.length; rcq++) {
+        b.push('<div style="padding:8px 0;border-bottom:1px solid ' + LINE
+          + ';font-size:14px">' + esc(TXT.ref_coupon
+            .replace('{code}', String(rcp[rcq].code || '—'))
+            .replace('{p}', String(rcp[rcq].percent || 0))
+            .replace('{d}', String(rcp[rcq].expires || '—'))) + '</div>');
+      }
+    }
+    var rin = rf.invites || [];
+    if (rin.length) {
+      b.push('<div style="font-size:14px;font-weight:600;margin-top:10px">'
+        + esc(TXT.ref_invites) + '</div>');
+      for (var rvq = 0; rvq < rin.length; rvq++) {
+        var stq = String(rin[rvq].status || 'registered');
+        var stl = TXT['ref_st_' + stq] || stq;
+        b.push('<div style="padding:6px 0;border-bottom:1px solid ' + LINE
+          + ';font-size:14px;opacity:.85">' + esc(String(rin[rvq].name || '—')
+            + ' — ' + stl) + '</div>');
+      }
+    }
+    var adm = rf.admin || null;
+    if (adm) {
+      b.push('<div style="font-size:15px;font-weight:600;margin:22px 0 2px">'
+        + esc(TXT.ref_adm_t) + '</div>');
+      b.push('<div style="font-size:12px;opacity:.55;margin:0 0 4px">'
+        + esc(TXT.ref_adm_hint) + '</div>');
+      var per = [[TXT.ref_adm_7d, adm.d7], [TXT.ref_adm_30d, adm.d30]];
+      for (var pi = 0; pi < per.length; pi++) {
+        var bb = per[pi][1] || {};
+        b.push('<div style="padding:9px 0;border-bottom:1px solid ' + LINE + ';font-size:14px">'
+          + '<div style="font-weight:600">' + esc(per[pi][0]) + '</div>'
+          + '<div style="font-size:13px;opacity:.8;margin-top:2px">'
+          + esc(TXT.ref_adm_line
+            .replace('{c}', String(bb.clicks || 0)).replace('{r}', String(bb.reg || 0))
+            .replace('{t}', String(bb.trials || 0)).replace('{p}', String(bb.paid || 0))
+            .replace('{g}', String(bb.granted || 0)).replace('{x}', String(bb.revoked || 0)))
+          + '</div></div>');
+      }
+      if (adm.conv) {
+        b.push('<div style="display:flex;justify-content:space-between;gap:12px;'
+          + 'padding:9px 0;border-bottom:1px solid ' + LINE + ';font-size:14px">'
+          + '<span style="opacity:.75">' + esc(TXT.ref_adm_conv) + '</span>'
+          + '<span style="font-weight:600">' + esc(adm.conv) + '</span></div>');
+      }
+      var top = adm.top || [];
+      if (top.length) {
+        b.push('<div style="font-size:14px;font-weight:600;margin-top:10px">'
+          + esc(TXT.ref_adm_top) + '</div>');
+        for (var qi = 0; qi < top.length; qi++) {
+          b.push('<div style="padding:6px 0;border-bottom:1px solid ' + LINE
+            + ';font-size:14px;opacity:.85">' + esc(TXT.ref_adm_top_row
+              .replace('{id}', String(top[qi].id || '—'))
+              .replace('{k}', String(top[qi].paid || 0))) + '</div>');
+        }
+      }
+      if (adm.review > 0) {
+        b.push('<div style="display:flex;justify-content:space-between;gap:12px;'
+          + 'padding:9px 0;border-bottom:1px solid ' + LINE + ';font-size:14px;color:'
+          + ACC + '"><span>' + esc(TXT.ref_adm_review) + '</span>'
+          + '<span style="font-weight:600">' + esc(String(adm.review)) + '</span></div>');
+      }
+      b.push('<div style="display:flex;justify-content:space-between;gap:12px;'
+        + 'padding:9px 0;font-size:14px"><span style="opacity:.75">'
+        + esc(TXT.ref_adm_granted_t) + '</span>'
+        + '<span style="font-weight:600">' + esc(String(adm.granted || 0)) + '</span></div>');
+    }
+    b.push(btn('https://t.me/share/url?url=' + encodeURIComponent(rf.link)
+      + '&text=' + encodeURIComponent(TXT.ref_share_txt), TXT.ref_share, false));
+    b.push('<a href="#" id="szc-refcopy" style="display:block;text-decoration:none;'
+      + 'text-align:center;margin:10px 0;padding:13px 14px;border-radius:12px;'
+      + 'background:' + CARD + ';color:inherit">' + esc(TXT.ref_copy) + '</a>');
+    b.push('</div>');
+    return b.join('');
+  }
+  /* Task 167: вкладка «Доп. услуги» — честная рамка ожиданий: кастомизации
+     под нужды клиента нет НИ В ОДНОМ тарифе (каталог собирается автоматически
+     и устроен одинаково у всех — отсюда стабильность и бесплатные обновления).
+     Разработка под личные нужды или уникальный дизайн — отдельная услуга,
+     оплачивается по договорённости; кнопка ведёт в чат поддержки — чужой
+     чат, переход работает (правило Task 163). */
+  function extraBody(d) {
+    var b = ['<div style="' + PAD + '">'];
+    if (d.user && d.user.name) {
+      b.push('<div style="font-size:15px;opacity:.65;margin-bottom:14px">'
+        + esc(TXT.hello.replace('{n}', d.user.name)) + '</div>');
+    }
+    b.push(tabbar());
+    b.push('<div style="font-size:23px;font-weight:700;letter-spacing:.2px">'
+      + esc(TXT.tab_extra) + '</div>');
+    b.push('<div style="background:' + CARD + ';border-radius:12px;'
+      + 'padding:12px 14px;margin-top:14px;font-size:14.5px;line-height:1.5">'
+      + esc(TXT.extra_p1) + '</div>');
+    b.push(para(esc(TXT.extra_p2)));
+    if (d.support) {
+      b.push(btn('https://t.me/' + esc(String(d.support).replace(/^@+/, '')),
+        TXT.extra_c2a, true));
+    }
+    b.push('</div>');
+    return b.join('');
+  }
+  function renderError(diag) {
+    diag = diag || {};
+    /* Task 132: три честных экрана вместо обезличенной ошибки + код для
+       диагностики по скриншоту: HTTP-статус / why / есть ли initData и токен. */
+    var noctx = !diag.init && !diag.tok;
+    var stale = (diag.why === 'stale' || diag.why === 'token_stale');
+    var t1 = noctx ? TXT.ctx_t : (stale ? TXT.stale_t : TXT.err_t);
+    var m1 = noctx ? TXT.ctx_m : (stale ? TXT.stale_m : TXT.err_m);
+    ov.innerHTML = '<div style="' + PAD + '">' + bar('#a34040')
+      + '<div style="font-size:23px;font-weight:700">' + esc(t1) + '</div>'
+      + '<div style="font-size:15px;opacity:.85;margin:8px 0 16px">' + esc(m1) + '</div>'
+      + '<a href="#" id="szc-retry" style="display:block;text-align:center;padding:13px 14px;'
+      + 'border-radius:12px;background:' + ACC + ';color:#fffdf8;font-weight:600;'
+      + 'text-decoration:none">' + esc(TXT.retry) + '</a>'
+      + '<div style="font-size:11px;opacity:.4;margin-top:16px;font-family:ui-monospace,Menlo,monospace">'
+      + esc('code ' + (diag.http || 0) + ' · ' + (diag.why || 'net')
+        + ' · init=' + (diag.init ? 'yes' : 'no')
+        + ' · tok=' + (diag.tok ? 'yes' : 'no')) + '</div></div>';
+    var r = document.getElementById('szc-retry');
+    if (r) r.addEventListener('click', function (ev) { ev.preventDefault(); haptic('light'); load(); });
+  }
+  function load() {
+    ov.innerHTML = '<div style="' + PAD + 'display:flex;align-items:center;'
+      + 'justify-content:center;min-height:70vh">'
+      + '<div style="width:34px;height:34px;border-radius:50%;'
+      + 'border:3px solid rgba(154,107,21,.25);border-top-color:' + ACC + ';'
+      + '-webkit-animation:szc .9s linear infinite;animation:szc .9s linear infinite"></div>'
+      + '<style>@-webkit-keyframes szc{to{-webkit-transform:rotate(360deg)}}'
+      + '@keyframes szc{to{transform:rotate(360deg)}}</style></div>';
+    var init = (w && w.initData) || '';
+    var diag0 = { init: init ? 1 : 0, tok: cabTok ? 1 : 0 };
+    function dthrow(http, why) {
+      throw { http: http, why: why, init: diag0.init, tok: diag0.tok };
+    }
+    var body = init ? { initData: init }
+      : (cabTok ? { cab_token: cabTok } : { initData: '' });
+    fetch(API + '/api/cabinet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (r) {
+      if (!r.ok) {
+        return r.json().catch(function () { return null; }).then(function (j) {
+          dthrow(r.status, (j && j.why) || '');
+        });
+      }
+      return r.json().then(function (d) {
+        if (!d || !d.ok) dthrow(r.status, 'payload');
+        render(d);
+      });
+    }).catch(function (e) {
+      if (e && typeof e.http === 'number') { renderError(e); return; }
+      renderError({ http: 0, why: 'net', init: diag0.init, tok: diag0.tok });
+    });
+  }
+  ov.addEventListener('click', function (ev) {
+    var t = ev.target;
+    while (t && t !== ov && !(t.tagName === 'A' && t.getAttribute('data-ext') === '1')) {
+      t = t.parentNode;
+    }
+    if (!t || t === ov) return;
+    haptic('light');
+    var href = t.getAttribute('href') || '';
+    if (w && w.openTelegramLink && /^https:\/\/t\.me\//.test(href)) {
+      ev.preventDefault();
+      /* Task 163: same-bot ветки больше нет — ссылки на чат того же бота
+         из кабинета убраны вовсе; остались share/поддержка/direct-миниапп */
+      w.openTelegramLink(href);
+    }
+  });
+  /* Task 191: нажатие кнопки «↩️ Возврат» — POST /api/refund_request с той же
+     аутентификацией, что у кабинета (initData / cab_token). Успех → тост,
+     гашение всех кнопок возврата и возврат в чат бота (WebApp.close()) — там
+     уже ждёт подтверждение. Ошибка → тост с честной причиной. */
+  ov.addEventListener('click', function (ev) {
+    var t = ev.target;
+    while (t && t !== ov && !(t.tagName === 'A' && t.getAttribute('data-rf'))) {
+      t = t.parentNode;
+    }
+    if (!t || t === ov) return;
+    ev.preventDefault();
+    requestRefund(t.getAttribute('data-rf'), t);
+  });
+  function rfBody(token) {
+    var init = (w && w.initData) || '';
+    return init ? { initData: init, token: token }
+      : (cabTok ? { cab_token: cabTok, token: token } : { initData: '', token: token });
+  }
+  function rfWhy(why) {
+    return TXT['ref_err_' + (why || 'server')] || TXT.ref_err_server;
+  }
+  function rfFail(el, msg) {
+    if (el) el.removeAttribute('data-busy');
+    toast(msg);
+  }
+  function rfDone() {
+    var all = ov.querySelectorAll('[data-rf]');
+    for (var i = 0; i < all.length; i++) {
+      all[i].removeAttribute('data-rf');
+      all[i].removeAttribute('data-busy');
+      all[i].style.opacity = '.45';
+    }
+    toast(TXT.ref_sent);
+    /* Кабинет открыт из чата бота — закрываем мини-апп, чтобы подтверждение
+       («Проверить и вернуть») было прямо перед глазами. */
+    setTimeout(function () { try { if (w && w.close) w.close(); } catch (e) {} }, 1600);
+  }
+  function requestRefund(token, el) {
+    if (!token || !el || el.getAttribute('data-busy') === '1') return;
+    el.setAttribute('data-busy', '1');
+    haptic('light');
+    fetch(API + '/api/refund_request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rfBody(token))
+    }).then(function (r) {
+      return r.json().catch(function () { return null; }).then(function (j) {
+        return { http: r.status, j: j };
+      });
+    }).then(function (res) {
+      var j = res.j || {};
+      if (res.http === 401) { rfFail(el, TXT.ref_err_auth); return; }
+      if (res.http >= 500 || !('ok' in j)) { rfFail(el, TXT.ref_err_server); return; }
+      if (j.ok) rfDone(); else rfFail(el, rfWhy(j.why));
+    }).catch(function () { rfFail(el, TXT.ref_err_server); });
+  }
+  load();
+})();
+</script>
+
+</body>
+</html>
