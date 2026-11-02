@@ -1,11 +1,25 @@
 {
   "version": 1,
-  "updated_at": "2026-11-02T11:34:47+03:00",
+  "updated_at": "2026-11-02T22:47:12+03:00",
   "channel": {
     "name": "DemoTest",
     "url": "https://t.me/Testovuj"
   },
   "posts": [
+    {
+      "id": 588,
+      "date": "2026-11-02",
+      "time": "22:46",
+      "title": "В прошлое воскресенье собрание проводили сидя на дереве. Детям было не сложно, взрослым - потруднее. Как полу…",
+      "preview": "",
+      "tags": [
+        "#church",
+        "#meeting"
+      ],
+      "kind": "text",
+      "url": "https://t.me/Testovuj/588",
+      "src": ""
+    },
     {
       "id": 587,
       "date": "2026-11-02",
