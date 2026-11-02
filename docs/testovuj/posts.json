@@ -1,20 +1,31 @@
 {
   "version": 1,
-  "updated_at": "2026-11-01T21:53:38+03:00",
+  "updated_at": "2026-11-02T10:49:57+03:00",
   "channel": {
     "name": "DemoTest",
     "url": "https://t.me/Testovuj"
   },
   "posts": [
     {
+      "id": 586,
+      "date": "2026-11-02",
+      "time": "10:45",
+      "title": "проверка",
+      "preview": "",
+      "tags": [
+        "#misc"
+      ],
+      "kind": "text",
+      "url": "https://t.me/Testovuj/586",
+      "src": ""
+    },
+    {
       "id": 585,
       "date": "2026-11-01",
       "time": "21:45",
       "title": "https://www.youtube.com/watch?v=0yEb4PYTrfY&t=780s",
       "preview": "",
-      "tags": [
-        "#videos"
-      ],
+      "tags": [],
       "kind": "text",
       "url": "https://t.me/Testovuj/585",
       "src": ""
@@ -25,9 +36,7 @@
       "time": "23:08",
       "title": "все получилось",
       "preview": "",
-      "tags": [
-        "#updates"
-      ],
+      "tags": [],
       "kind": "text",
       "url": "https://t.me/Testovuj/584",
       "src": ""
@@ -38,9 +47,7 @@
       "time": "23:07",
       "title": "All posts of this channel are now in the “Table of Contents” catalog",
       "preview": "Topics, months, search: the post you need is a couple of taps away — no endless scrolling. Try it yourself: the “📖 Table of Contents” button is pinned in this channel. If you’d lik",
-      "tags": [
-        "#catalog"
-      ],
+      "tags": [],
       "kind": "text",
       "url": "https://t.me/Testovuj/582",
       "src": ""
