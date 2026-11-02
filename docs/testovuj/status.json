@@ -1,0 +1,12 @@
+{
+  "status": "stopped",
+  "version": "sz-stop-v1",
+  "channel": "testovuj",
+  "date": "02.11.2026",
+  "title": "Catalog temporarily unavailable",
+  "msg": "The service period for the TOC of channel @testovuj expired (02.11.2026). Updates are paused, but all posts are kept.",
+  "hint": "Renew the subscription — the catalog will return automatically together with all its data.",
+  "btn": "Renew subscription",
+  "renew": "https://t.me/oglavlenie_shop_bot?start=renew",
+  "stopped_at": 1793650299
+}
