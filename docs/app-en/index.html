@@ -17,7 +17,7 @@ window.__TOC_DEFAULT = 'testovuj';
      перезагружает страницу с ?cbv=<ver> — URL другой, устаревший кэш мимо;
      дальше этот URL переиспользуется и честно ревалидируется по ETag.
      Один раз за сессию (sessionStorage); если cbv уже в query — молчим. */
-  var CBV = 'v69';   /* общий ключ кэша обоих шеллов (ru/en): бамп двумя файлами разом */
+  var CBV = 'v70';   /* общий ключ кэша обоих шеллов (ru/en): бамп двумя файлами разом */
   if (location.search.indexOf('cbv=') !== -1) return;
   try {
     var s = window.sessionStorage;
@@ -361,8 +361,8 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Contents</b> · a catalog of a Telegram channel’s posts · <span id="ver">v69-en</span></div>
-    <div class="us">Get the same catalog for your channel: <a id="footBot" href="https://t.me/oglavlenie_shop_bot" target="_blank" rel="noopener">🤖 bot</a> · <a id="footSite" href="https://eremeevmaks41-sys.github.io/oglavlenie/" target="_blank" rel="noopener">🌐 site</a></div>
+    <div><b>Contents</b> · a catalog of a Telegram channel’s posts · <span id="ver">v70-en</span></div>
+    <div class="us">Get the same catalog for your channel: <a id="footBot" href="https://t.me/oglavlenie_shop_bot" target="_blank" rel="noopener">🤖 bot</a> · <a id="footSite" href="https://oglavlenie.github.io/" target="_blank" rel="noopener">🌐 site</a></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
@@ -826,7 +826,7 @@ function licenseValid(licensee, key){
    привязать к работоспособности, как и лицензию — убрал из кода — программа
    перестаёт работать»). Проверяется фактический DOM: правка config.js не
    помогает, сверяется то, что реально стоит в футере. ── */
-var _szSite = 'eremeevmaks41-sys.github' + '.io/oglavlenie';
+var _szSite = 'oglavlenie.github' + '.io/';
 var _szMark = 'catalog for your channel';
 function _szBrandOK(){
   try {
@@ -1044,7 +1044,7 @@ function applyConfig(){
      fB.href = fHref;
    }
    var fS = document.getElementById('footSite');
-   if (fS) fS.href = cfg.footer_site || 'https://eremeevmaks41-sys.github.io/oglavlenie/';
+   if (fS) fS.href = cfg.footer_site || 'https://oglavlenie.github.io/';
 
 /* ── фильтрация и рендер ── */
 function pluralWord(n, forms){
