@@ -7,8 +7,8 @@ window.SZ_CONFIG = {
   bot_username: "oglavlenie_shop_bot",
   licensee: "Евангелие Реформации",
   license_key: "SZ-553E5BF7F906824B",
-  license_id: "demo-3me623vz",
-  beacon: "",
+  license_id: "demo-5wjzjbet",
+  beacon: "https://oglavlenie-demo-bot.onrender.com",
   footer_bot: "https://t.me/oglavlenie_shop_bot",
   footer_site: "https://oglavlenie.github.io/",
 };
