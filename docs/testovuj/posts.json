@@ -1,21 +1,31 @@
 {
   "version": 1,
-  "updated_at": "2026-11-05T21:34:22+03:00",
+  "updated_at": "2026-11-05T22:20:51+03:00",
   "channel": {
     "name": "DemoTest",
     "url": "https://t.me/Testovuj"
   },
   "posts": [
     {
+      "id": 606,
+      "date": "2026-11-05",
+      "time": "22:19",
+      "title": "https://www.facebook.com/kolomiytsevacom",
+      "preview": "",
+      "tags": [
+        "#разное"
+      ],
+      "kind": "text",
+      "url": "https://t.me/Testovuj/606",
+      "src": ""
+    },
+    {
       "id": 605,
       "date": "2026-11-05",
       "time": "21:29",
       "title": "🌳 Христианское радио в Telegram. Бесплатно.",
       "preview": "🌳 Христианское радио в Telegram. Бесплатно.",
-      "tags": [
-        "#христианство",
-        "#радио"
-      ],
+      "tags": [],
       "kind": "text",
       "url": "https://t.me/Testovuj/605",
       "src": ""
