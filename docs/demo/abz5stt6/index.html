@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
 <meta name="robots" content="noindex, nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#F3F7FD">
-<title>Contents</title>
+<title>Оглавление</title>
 <!-- ═════════════════════════════════════════════════════════════════
-     "Table of Contents" for a Telegram channel · mini app
-     One page, no external dependencies. Hosting: GitHub Pages.
-     Data: docs/posts.json (updated automatically by Actions).
-     Settings: docs/config.js  (channel, color, license).
+     «Оглавление телеграм-канала» · мини-апп
+     Одна страница, без внешних зависимостей. Хостинг: GitHub Pages.
+     Данные: docs/posts.json (обновляется автоматически Actions).
+     Настройки: docs/config.js  (канал, цвет, лицензия).
      ═════════════════════════════════════════════════════════════════ -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +40,7 @@ body{
 }
 .wrap{max-width:640px;margin:0 auto;padding:14px 14px calc(30px + env(safe-area-inset-bottom))}
 
-/* ── header ── */
+/* ── шапка ── */
 header{display:flex;align-items:center;gap:12px;padding:10px 2px 14px}
 .logo{
   width:46px;height:46px;border-radius:14px;flex:0 0 auto;
@@ -66,14 +66,14 @@ header{display:flex;align-items:center;gap:12px;padding:10px 2px 14px}
 }
 .h-open:active{background:var(--accent-soft);transform:scale(.96)}
 
-/* ── search ── */
+/* ── поиск ── */
 .search{position:relative;margin-bottom:10px}
 .search input{
   width:100%;padding:11px 38px 11px 38px;border-radius:13px;border:1.5px solid var(--line);
   background:var(--search);color:var(--text);font-size:15px;outline:none;
 }
 .search input:focus{border-color:var(--accent)}
-/* iOS draws its own cross for type=search — hide it, we have our own */
+/* iOS рисует свой крестик для type=search — прячем: у нас свой */
 .search input{-webkit-appearance:none;appearance:none}
 .search input::-webkit-search-cancel-button,
 .search input::-webkit-search-decoration{-webkit-appearance:none;display:none}
@@ -85,7 +85,7 @@ header{display:flex;align-items:center;gap:12px;padding:10px 2px 14px}
 }
 .search .clr:active{color:var(--accent);transform:translateY(-50%) scale(.88)}
 
-/* ── topics (chips) ── */
+/* ── темы (чипсы) ── */
 .chips{
   display:flex;gap:7px;overflow-x:auto;padding:2px 2px 12px;
   scrollbar-width:none;-webkit-overflow-scrolling:touch;
@@ -100,10 +100,10 @@ header{display:flex;align-items:center;gap:12px;padding:10px 2px 14px}
 .chip:active{transform:scale(.93)}
 .chip.active{background:var(--chip-active);color:var(--chip-active-text);border-color:var(--chip-active)}
 
-/* ── dates and cards ── */
+/* ── даты и карточки ── */
 .day{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin:16px 2px 8px}
 .card{
-  display:block;color:inherit;text-decoration:none; /* the card is a real <a> */
+  display:block;color:inherit;text-decoration:none; /* карточка — настоящая ссылка <a> */
   background:var(--card);border:1px solid var(--line);border-radius:15px;
   padding:12px 14px;margin-bottom:9px;box-shadow:var(--shadow);cursor:pointer;
   transition:background .12s ease, transform .12s ease;
@@ -121,7 +121,7 @@ html,body{overflow-x:hidden}
 header>div{min-width:0}
 .c-title,.c-prev,.c-tag,.t-title,.h-name{min-width:0;overflow-wrap:anywhere;word-break:break-word}
 
-/* ── view switch: Contents / Feed ── */
+/* ── переключатель вида: Оглавление / Лента ── */
 .views{display:flex;background:var(--chip);border:1.5px solid var(--line);border-radius:12px;padding:3px;margin-bottom:11px}
 .views button{
   flex:1;border:0;background:transparent;color:var(--muted);
@@ -132,7 +132,7 @@ header>div{min-width:0}
 .views button:active{color:var(--text)}
 .views button.active{background:var(--chip-active);color:var(--chip-active-text)}
 
-/* ── card grid (contents root and sections) ── */
+/* ── сетка карточек (корень оглавления и разделы) ── */
 .tgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:4px}
 .tcard{
   background:var(--card);border:1px solid var(--line);border-radius:15px;
@@ -156,7 +156,7 @@ header>div{min-width:0}
 .back:active{background:var(--accent-soft);transform:scale(.98)}
 
 
-/* ── states ── */
+/* ── состояния ── */
 .more{
   display:block;width:100%;margin:14px 0 4px;padding:12px;border-radius:13px;
   border:1.5px dashed var(--accent);background:transparent;color:var(--accent);
@@ -175,7 +175,7 @@ header>div{min-width:0}
 html[data-theme="dark"] .banner{background:#3a2424;color:#e8b0b0;border-color:#5a3434}
 .banner a{color:inherit;font-weight:700;text-decoration:underline}
 
-/* ── footer (watermark) ── */
+/* ── футер (водяной знак) ── */
 footer{margin-top:26px;padding-top:14px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:12px;line-height:1.7}
 footer b{color:var(--text);font-weight:600}
 footer .lic{font-size:11px;opacity:.75}
@@ -211,18 +211,16 @@ html[data-theme="dark"] .more{border-color:rgba(111,208,255,.45)}
 html[data-theme="dark"] .banner{background:#3A2530;color:#F0B6C6;border-color:#5C3644}
 footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
 </style>
-<!-- ═══ TELEGRAM BRIDGE — official and REQUIRED (async) ═══
-     core.telegram.org/bots/webapps → "Initializing Mini Apps":
-     "To connect your Mini App to the Telegram client, place the script
-     telegram-web-app.js in the <head> tag before any other scripts".
-     Without it window.Telegram.WebApp is NOT created — on iPhone tg=NO:
-     no haptic, no theme, no openTelegramLink (root cause of the
-     "no navigation" bug in versions 52-e…52-l).
-     THE async ATTRIBUTE (the "it used to open faster" case, 12.9.2026):
-     the page does NOT wait for the telegram.org script and paints
-     instantly — the bridge arrives in parallel, long before the first
-     tap; the core below picks up its readiness itself (adoptBridge +
-     load/error subscription + a safety timer). ═══ -->
+<!-- ═══ МОСТ TELEGRAM — официальный и ОБЯЗАТЕЛЬНЫЙ (async) ═══
+     core.telegram.org/bots/webapps → «Initializing Mini Apps»: скрипт
+     telegram-web-app.js подключается в <head>. Без него
+     window.Telegram.WebApp не создаётся у части клиентов (iPhone и др.) —
+     тап по карточке поста молча ничего не открывает. Ровно это было
+     причиной «не тапаются карточки поста» (12.9.2026).
+     АТРИБУТ async (кейс босса «открывалось быстрее»): страница НЕ ждёт
+     скрипт с telegram.org и рисуется мгновенно, мост доезжает параллельно;
+     ядро ниже само подхватывает его готовность (adoptBridge + подписка
+     load/error + страховочный таймер). ═══ -->
 <script async src="https://telegram.org/js/telegram-web-app.js?63"></script>
 </head>
 <body>
@@ -230,26 +228,26 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <header>
     <div class="logo" id="logo">📖</div>
     <div>
-      <div class="h-name" id="hName">Contents</div>
-      <div class="h-sub" id="hSub">A catalog of the channel’s posts</div>
+      <div class="h-name" id="hName">Оглавление</div>
+      <div class="h-sub" id="hSub">каталог постов канала</div>
     </div>
-    <button class="h-share" id="hShare" type="button" aria-label="Copy table of contents link" title="Copy link">
+    <button class="h-share" id="hShare" type="button" aria-label="Скопировать ссылку на оглавление" title="Скопировать ссылку">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
     </button>
-    <a class="h-open" id="hOpen" href="#">Channel</a>
+    <a class="h-open" id="hOpen" href="#">Канал</a>
   </header>
 
   <div class="banner" id="banner"></div>
 
   <div class="search">
     <span class="ico">🔍</span>
-    <input id="q" type="search" placeholder="Search the contents…" autocomplete="off">
-    <button class="clr" id="clr" aria-label="Clear">✕</button>
+    <input id="q" type="search" placeholder="Поиск по оглавлению…" autocomplete="off">
+    <button class="clr" id="clr" aria-label="Очистить">✕</button>
   </div>
 
   <div class="views" id="views" style="display:none">
-    <button id="vToc" type="button">📖 Contents</button>
-    <button id="vFeed" type="button">🕘 Feed</button>
+    <button id="vToc" type="button">📖 Оглавление</button>
+    <button id="vFeed" type="button">🕘 Лента</button>
   </div>
 
   <div class="chips" id="chips"></div>
@@ -257,8 +255,8 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Contents</b> · a catalog of Telegram channel posts · <span id="ver">v61-en</span></div>
-    <div class="us">Get the same catalog for your channel: <a id="footBot" href="https://t.me/oglavlenie_shop_bot" target="_blank" rel="noopener">🤖 Table of Contents bot</a> · <a id="footSite" href="https://oglavlenie.github.io/" target="_blank" rel="noopener">🌐 website</a></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v61-ru</span></div>
+    <div class="us">Такой же каталог для своего канала: <a id="footBot" href="https://t.me/oglavlenie_shop_bot" target="_blank" rel="noopener">🤖 бот «Оглавление»</a> · <a id="footSite" href="https://oglavlenie.github.io/" target="_blank" rel="noopener">🌐 сайт</a></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
 </div>
@@ -266,15 +264,15 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
 <script src="config.js"></script>
 <script>
 /* ══════════════════════════════════════════════════════════════
-   "Table of Contents" for a Telegram channel · mini app core
-   Flow: config.js → license → posts.json → render.
-   No need to edit this file: everything is configured in config.js.
+   «Оглавление телеграм-канала» · ядро мини-аппа
+   Порядок работы: config.js → лицензия → posts.json → рендер.
+   Править этот файл не нужно: всё настраивается в config.js.
    ══════════════════════════════════════════════════════════════ */
 (function(){
 'use strict';
 
-var SALT = 'SODERZHANIE-EN-v1-4k8t';               // internal license salt
-var PAGE_SIZE = 100;                            // cards per single page load
+var SALT = 'SODERZHANIE-v1-7f3a';               // служебная соль лицензии
+var PAGE_SIZE = 100;                            // карточек за одну подгрузку
 var cfg = window.SZ_CONFIG || {};
 /* ── Счётчик открытий «Оглавления» (v1.7.28): 1×1-пиксель на наш бэкенд.
    Без внешних сервисов и личных данных: id браузера случайный, живёт в
@@ -292,46 +290,44 @@ try { (function(){
 })(); } catch (e) {}
 
 
-/* ── Telegram WebApp: theme and link opening ──
-   The official script (see <head>) creates window.Telegram.WebApp even
-   OUTSIDE Telegram — but there it is a dummy: in its source
-   webAppVersion='6.0', webAppPlatform='unknown', postEvent goes nowhere.
-   A real client always marks the mini app with tgWebApp* hash params
-   (tgWebAppPlatform, tgWebAppData, tgWebAppVersion…). Therefore only a
-   real mini-app context counts as the bridge — otherwise in a plain
-   browser the fallbacks break (the ladder below would be shadowed by
-   dead calls). */
+/* ── Telegram WebApp: тема и открытие ссылок ──
+   Официальный скрипт (см. <head>) создаёт window.Telegram.WebApp и ВНЕ
+   Telegram — но там он фиктивный: platform='unknown', postEvent уходит
+   в никуда. Настоящий клиент всегда помечает мини-апп параметрами
+   tgWebApp* в адресе страницы. Поэтому мостом считаем только настоящий
+   контекст мини-аппа — иначе фиктивные вызовы в обычном браузере
+   затмят рабочие обходные пути ниже. */
 var rawTg = null, tg = null, bridgePending = true, bridgeTimer = null;
 function adoptBridge(){
   rawTg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-  if (!rawTg) return false;   /* the script is still in flight — keep waiting */
+  if (!rawTg) return false;   /* скрипт ещё едет — остаёмся в режиме ожидания */
   var realBridge = (rawTg.platform && rawTg.platform !== 'unknown') ||
                    (rawTg.initData && String(rawTg.initData).length > 0) ||
                    /[?&#]tgWebApp/.test(window.location.href);
   if (!realBridge){
-    bridgePending = false;   /* dummy — final verdict */
-    diagNote('dummy WebApp (outside Telegram) — ignoring the bridge');
+    bridgePending = false;   /* фиктивный — окончательно */
+    diagNote('фиктивный WebApp (вне Telegram) — мост игнорирую');
     return false;
   }
   tg = rawTg; bridgePending = false;
   try { tg.ready(); tg.expand(); } catch(e){}
   themeApply();
   headerColorApply();
-  wireTgBack();   /* BackButton was wired at boot only — re-wire on late arrival */
+  wireTgBack();   /* кнопка «Назад» ставится на старте — при позднем приходе моста ставим снова */
   if (tg.onEvent) { try { tg.onEvent('themeChanged', function(){ themeApply(); headerColorApply(); }); } catch(e){} }
   var late = document.getElementById('tgBanner');
   if (late && late.parentNode) late.parentNode.removeChild(late);
-  diagNote('bridge connected (async): platform=' + (tg.platform || '?') + ' · ver=' + (tg.version || '?'));
+  diagNote('мост подключён (async): platform=' + (tg.platform || '?') + ' · ver=' + (tg.version || '?'));
   return true;
 }
 adoptBridge();
 if (bridgePending && !rawTg){
   var settleBridge = function(){
-    if (settleBridge.done) return;   /* the final verdict is recorded exactly once */
+    if (settleBridge.done) return;   /* финал фиксируется ровно один раз */
     settleBridge.done = true;
     bridgePending = false;
     clearTimeout(bridgeTimer);
-    if (!tg && !rawTg) diagNote('bridge never arrived (error/timeout) — opening as a plain page');
+    if (!tg && !rawTg) diagNote('мост не доехал (ошибка/таймаут) — открываю как обычная страница');
     maybeBridgeBanner();
   };
   var bridgeArrive = function(){
@@ -344,14 +340,14 @@ if (bridgePending && !rawTg){
     bridgeEl.addEventListener('load', bridgeArrive);
     bridgeEl.addEventListener('error', settleBridge);
   } else { settleBridge(); }
-  bridgeTimer = setTimeout(settleBridge, 3000);   /* script hangs: the status is final */
+  bridgeTimer = setTimeout(settleBridge, 3000);   /* скрипт завис: статус окончательный */
 }
 
-/* iOS Safari applies :active only if the page has a touchstart handler */
+/* iOS Safari вешает :active только при обработчике touchstart */
 document.addEventListener('touchstart', function(){}, {passive:true});
 
-/* ── haptic feedback: HapticFeedback exists in mobile Telegram;
-   in a plain browser and on desktop the calls are silently ignored ── */
+/* ── тактильная отдача: HapticFeedback есть в мобильном Telegram;
+   в обычном браузере и на десктопе вызовы молча игнорируются ── */
 function haptic(style){
   if (tg && tg.HapticFeedback && tg.HapticFeedback.impactOccurred) {
     try { tg.HapticFeedback.impactOccurred(style); } catch(e){}
@@ -368,7 +364,7 @@ function hapticNotify(type){
   }
 }
 
-/* ── Telegram native Back button: mirrors the internal "← …" button ── */
+/* ── нативная кнопка «Назад» Telegram: дублирует внутреннюю кнопку «← …» ── */
 var tgBackWired = false;
 function wireTgBack(){
   if (!tg || !tg.BackButton || tgBackWired) return;
@@ -387,7 +383,7 @@ function updateTgBack(){
   try { if (need) tg.BackButton.show(); else tg.BackButton.hide(); } catch(e){}
 }
 
-/* ── toast + link copying (share button) ── */
+/* ── тост + копирование ссылки (кнопка «Поделиться» в шапке) ── */
 var toastTimer = null;
 function toast(msg){
   var t = document.getElementById('toast');
@@ -444,8 +440,8 @@ function themeApply(){
     return (0.299*r + 0.587*g + 0.114*b) < 128;
   }
 }
-/* the Telegram header and the background under the content are tinted
-   to the app theme; meta theme-color — same for a plain browser */
+/* шапка Telegram и фон под контентом окрашиваются в тему приложения;
+   meta theme-color — то же для обычного браузера */
 function headerColorApply(){
   var bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
   var m = document.querySelector('meta[name="theme-color"]');
@@ -453,47 +449,17 @@ function headerColorApply(){
   if (tg && tg.setHeaderColor) { try { tg.setHeaderColor(bg); } catch(e){ try { tg.setHeaderColor('bg_color'); } catch(e2){} } }
   if (tg && tg.setBackgroundColor) { try { tg.setBackgroundColor(bg); } catch(e){} }
 }
-if (!tg) { themeApply(); headerColorApply(); }   /* without the bridge — system theme; with the bridge adoptBridge has applied it */
+if (!tg) { themeApply(); headerColorApply(); }   /* без моста тема по системной настройке; с мостом применил adoptBridge */
 
-/* iOS/iPadOS: navigations via target="_blank" and window.open in the
-   built-in Telegram browser on iPhone are SILENTLY BLOCKED (WKWebView
-   cannot open new tabs) — the only reliable paths there: the official
-   mini-app API or navigation in the same tab. */
+/* iOS/iPadOS: переходы через target="_blank" и window.open во встроенном
+   браузере Telegram на iPhone блокируются молча — надёжные пути только
+   официальный API мини-аппа или навигация в той же вкладке. */
 var iOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '') ||
-          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); /* iPadOS 13+ masquerades as a Mac */
-/* ── POST OPENING — the strategy of the live table-of-contents app
-   MyRadio (the "From Reading to Transformation" channel), verified
-   live on iOS 9.6 and Android 9.6, 2026-07-07 (notes from that
-   project's code):
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); /* iPadOS 13+ маскируется под Mac */
 
-     Desktop Telegram → tg.openTelegramLink (opens inside Telegram)
-     Telegram Web     → window.open (new browser tab)
-     Mobile           → tg.openTelegramLink: navigation happens straight
-                        into the channel, the mini app is NOT closed —
-                        Telegram itself shows the channel over the app;
-                        return by swipe or the system "Back" button.
-                        This is exactly what Telegram intends for
-                        iPhones.
-
-   Known iOS quirk (our "post behind the app" case): if the mini app is
-   launched FROM THE SAME channel whose post the link points to (for us
-   — the pinned message with the contents button), openTelegramLink
-   does NOT perform a visible navigation — no vibration, no
-   minimization. The navigation itself still happens correctly in the
-   background. Tracked via visibilitychange: if the app has not
-   minimized within 1.5 s — the silent case, cured as described in the
-   block below (WebApp.close()). */
-/* ── ROOT CAUSE of the "no navigation" bug (52-e…52-l): the official
-   telegram-web-app.js was not included in <head> — the only way the
-   Telegram client creates window.Telegram.WebApp. Without it, on iPhone
-   tg is always NO: haptic/theme/openTelegramLink do not exist, and none
-   of the strategies below ever ran. Since 52-m the script is included
-   in <head> — on iOS, entering via the pinned message/bot menu brings
-   the bridge up (tg=yes). Confirmation: the head of the live MyRadio
-   contains the same script. */
-/* ── self-diagnostics (Task 120: footer keeps product lines only — the
-   line is hidden by default, visible with ?diag=1, every note is mirrored
-   to console): records the environment and the branch that fired. */
+/* ── самодиагностика (Task 120: в футере только строки продукта —
+   линия скрыта, видна при ?diag=1, каждая заметка идёт в консоль):
+   записывает среду запуска и то, какая ветка открытия сработала ── */
 var diagEl = null, diagLog = [];
 function diagInit(){
   diagEl = document.createElement('div');
@@ -504,10 +470,10 @@ function diagInit(){
   diagEl.style.display = /[?&]diag=/.test(location.search) ? '' : 'none';
   var f = document.querySelector('footer');
   if (f) f.appendChild(diagEl);
-  diagNote('start: tg=' + (tg
-    ? 'yes · platform=' + (tg.platform || '?') + ' · ver=' + (tg.version || '?')
-    : (rawTg ? 'NO (dummy WebApp outside Telegram — ignoring)'
-       : (bridgePending ? 'bridge still loading (async)…' : 'NO — plain page, no bridge'))));
+  diagNote('старт: tg=' + (tg
+    ? 'да · platform=' + (tg.platform || '?') + ' · ver=' + (tg.version || '?')
+    : (rawTg ? 'НЕТ (фиктивный WebApp вне Telegram — игнорирую)'
+       : (bridgePending ? 'мост ещё грузится (async)…' : 'НЕТ — обычная страница, моста нет'))));
 }
 function diagNote(msg){
   try { console.log('[oglavlenie] ' + msg); } catch(e){}
@@ -515,39 +481,41 @@ function diagNote(msg){
   var d = new Date(), z = function(x){ return ('0'+x).slice(-2); };
   diagLog.push(z(d.getHours())+':'+z(d.getMinutes())+':'+z(d.getSeconds())+' '+msg);
   if (diagLog.length > 4) diagLog = diagLog.slice(-4);
-  diagEl.textContent = 'debug: ' + diagLog.join(' | ');
+  diagEl.textContent = 'диагностика: ' + diagLog.join(' | ');
 }
 
-/* ── without the Telegram bridge (opened not as a mini app): the bridge
-   cannot be created from inside the page. The scary error is GONE (Task 114):
-   web mode opens posts in the same tab, the mode shows in footer diagnostics */
+/* ── без моста Telegram (открытие не как мини-апп): изнутри страницы мост
+   создать нельзя. Пугающую ошибку убрали (Task 114): веб-режим полноценно
+   открывает посты той же вкладкой, факт режима виден в футере-диагностике ── */
 function showBridgeBanner(){
   if (tg || !document.querySelector) return;
-  if (document.getElementById('tgBanner')) return;   /* already shown — do not duplicate */
-  /* Task 114: no more scary banner — web mode opens posts in the same tab
-     (routeOpen); the mode is visible in the footer diagnostics */
-  diagNote('web mode: posts open in the same tab');
+  if (document.getElementById('tgBanner')) return;   /* уже показан — не дублируем */
+  /* Task 114: пугающего баннера больше нет — веб-режим полноценно открывает
+     посты той же вкладкой (routeOpen); режим виден в диагностике футера */
+  diagNote('веб-режим: посты открываются той же вкладкой');
 }
-/* the async bridge may still be in flight — never scare the user too early:
-   the banner is shown only when the bridge status is final */
+/* async-мост мог ещё не доехать — раньше времени пугать пользователя нельзя:
+   баннер показываем только когда статус моста окончательный */
 function maybeBridgeBanner(){
   if (bridgePending) return;
   if (!tg) showBridgeBanner();
 }
 
-/* The silent case (same channel): openTelegramLink does perform the
-   navigation in the BACKGROUND correctly — confirmed with the Safari
-   inspector (MyRadio, 2026-07-08) — but there is no visible transition,
-   the app stays on top of the already opened post.
-
-   THE CURE (per the official docs at core.telegram.org/bots/webapps):
-   1. openLink may be called "only in response to user interaction" —
-      our former setTimeout fallback after 1.5 s violated that contract,
-      so Telegram silently discarded it (and on iOS openLink also always
-      opens external Safari — Telegram-iOS issue #1670).
-   2. The documented WebApp.close() violates no contract: closing the
-      app reveals the post already opened behind it (exactly what the
-      inspector captured in MyRadio). */
+/* ── ОТКРЫТИЕ ПОСТОВ — стратегия живого приложения (проверена на
+   iOS и Android, 2026-07):
+     Telegram Desktop → tg.openTelegramLink (открывает внутри Telegram)
+     Telegram Web     → window.open (новая вкладка браузера)
+     Мобильные        → tg.openTelegramLink: переход прямо в канал,
+                        мини-апп НЕ закрывается — Telegram сам показывает
+                        пост поверх приложения; возврат свайпом или «Назад».
+   Тихий случай (пост из того же канала, откуда открыт мини-апп):
+   переход происходит корректно, НО без видимой смены экрана. Лечим по
+   официальной документации: нативный уход приложения в фон фиксируем
+   через visibilitychange; если за 1.5 с не свернулся:
+     iOS  → WebApp.close(): пост уже открыт позади, close() его покажет
+            (openLink вне жеста пользователя Telegram молча отбрасывает,
+            а на iOS он ещё и открывает внешний Safari);
+     иные → tg.openLink(): встроенный браузер, видимый рабочий путь. */
 var TG_LINK_FALLBACK_MS = 1500;
 function openInTelegram(url){
   var settled = false;
@@ -555,78 +523,73 @@ function openInTelegram(url){
     if (document.hidden){
       settled = true;
       document.removeEventListener('visibilitychange', onVisChange);
-      diagNote('app minimized — post opened, swipe back to return');
+      diagNote('приложение свернулось — пост открыт, назад свайпом');
     }
   }
   document.addEventListener('visibilitychange', onVisChange);
-  try { tg.openTelegramLink(url); diagNote('openTelegramLink sent'); }
-  catch(e){ diagNote('openTelegramLink error: ' + (e && e.message ? e.message : '?')); }
+  try { tg.openTelegramLink(url); diagNote('openTelegramLink отправлен'); }
+  catch(e){ diagNote('ошибка openTelegramLink: ' + (e && e.message ? e.message : '?')); }
   setTimeout(function(){
     document.removeEventListener('visibilitychange', onVisChange);
     if (settled) return;
     if (tg.platform === 'ios' && tg.close){
-      diagNote('not minimized in 1.5s → close() (post already opened in background)');
+      diagNote('не свернулся за 1.5 с → close() (пост уже открыт позади)');
       try { tg.close(); } catch(e){}
-      /* last resort if close is not supported by the client */
+      /* последний шанс, если close клиентом не поддержан */
       setTimeout(function(){
         if (!settled && tg.openLink){
-          diagNote('close did not work → openLink');
+          diagNote('close не сработал → openLink');
           try { tg.openLink(url, {try_instant_view:false}); } catch(e){}
         }
       }, 800);
     } else if (tg.openLink){
-      diagNote('not minimized in 1.5s → openLink');
+      diagNote('не свернулся за 1.5 с → openLink');
       try { tg.openLink(url, {try_instant_view:false}); } catch(e){}
     }
   }, TG_LINK_FALLBACK_MS);
 }
-function openPost(url){
+function openUrl(url){
   if (!url) return;
   if (!tg && bridgePending){
-    /* the bridge is still in flight (async): wait for it briefly so the tap
-       does not fall into the fallback branch too early; if it never arrives —
-       the same proven paths as below */
-    diagNote('bridge still loading — waiting up to 1.2 s');
+    /* мост ещё едет (async): коротко дождёмся, чтобы тап не ушёл в запасную
+       ветку раньше времени; если мост так и не приехал — прежние пути */
+    diagNote('мост ещё грузится — жду его до 1.2 с');
     var t0 = Date.now();
     (function again(){
-      if (tg){ diagNote('bridge arrived — opening normally'); openPost(url); return; }
-      if (!bridgePending || Date.now() - t0 > 1200){ routePost(url); return; }
+      if (tg){ diagNote('мост доехал — открываю штатно'); openUrl(url); return; }
+      if (!bridgePending || Date.now() - t0 > 1200){ routeOpen(url); return; }
       setTimeout(again, 60);
     })();
     return;
   }
-  routePost(url);
+  routeOpen(url);
 }
-function routePost(url){
+function routeOpen(url){
   if (!url) return;
   if (!tg){
-    /* outside the mini app (including Telegram's built-in browser from the
-       channel button): window.open is silently blocked — the only reliable
-       path everywhere is navigation in the same tab: in Telegram it opens
-       the post right in the app, in a plain browser — the t.me page with
-       the "open in app" button */
-    diagNote('no bridge → same-tab navigation');
+    /* вне мини-аппа (в т.ч. встроенный браузер Telegram из кнопки канала):
+       window.open блокируется молча — единственный надёжный путь везде —
+       навигация в той же вкладке: в Telegram откроет пост прямо в приложении,
+       в обычном браузере — страницу t.me с кнопкой «открыть в приложении» */
+    diagNote('нет моста → навигация той же вкладкой');
     window.location.href = url;
     return;
   }
   var plat = tg.platform || '';
-  /* Telegram Web (web/weba) — in a new browser tab (as in MyRadio) */
+  /* Telegram Web (web/weba) — в новой вкладке браузера */
   if (plat === 'web' || plat === 'weba') { window.open(url, '_blank'); return; }
-  /* native apps (desktop, macOS, iOS, Android) — go straight into
-     Telegram via openTelegramLink, without an external browser */
+  /* нативные приложения (десктоп, macOS, iOS, Android) — прямо в
+     Telegram через openTelegramLink, без внешнего браузера */
   var NATIVE_APP_PLATFORMS = {tdesktop:1, macos:1, ios:1, android:1, android_x:1};
   var canUseTelegramLink = !!tg.openTelegramLink
     && (!tg.isVersionAtLeast || tg.isVersionAtLeast('7.0'));
-  if (NATIVE_APP_PLATFORMS[plat] && canUseTelegramLink) {
-    openInTelegram(url);
-    return;
-  }
-  /* unusual/unrecognized platform or a client older than Bot API 7.0 —
-     fallback to the good old openLink(): a guaranteed visible working path */
+  if (NATIVE_APP_PLATFORMS[plat] && canUseTelegramLink) { openInTelegram(url); return; }
+  /* неизвестная платформа или клиент старше Bot API 7.0 — старый добрый
+     openLink(): гарантированно видимый рабочий путь */
   try { tg.openLink(url, {try_instant_view:false}); } catch(e){}
 }
 
-/* ── license: sha256(licensee|salt), first 16 hex = key ── */
+/* ── лицензия: sha256(licensee|salt) первые 16 hex = ключ ── */
 function hex(buf){
   var out = '';
   new Uint8Array(buf).forEach(function(b){ out += ('0'+b.toString(16)).slice(-2); });
@@ -648,20 +611,20 @@ function licenseValid(licensee, key){
   })).then(function(rs){ return rs.indexOf(true) !== -1; });
 }
 
-/* ── utilities ── */
-/* ── authorship is part of the license (boss 31.10.2026: "the footer links
-   must be tied to the app actually working, like the license — remove them
-   from the code and the program stops"). The check reads the live DOM, so
-   editing config.js does not help: what is actually on the page is verified. ── */
+/* ── утилиты ── */
+/* ── авторство — часть лицензии (босс 31.10.2026: «наличие ссылок в футере
+   привязать к работоспособности, как и лицензию — убрал из кода — программа
+   перестаёт работать»). Проверяется фактический DOM: правка config.js не
+   помогает, сверяется то, что реально стоит в футере. ── */
 var _szSite = 'oglavlenie.github' + '.io/';
-var _szMark = 'catalog for your channel';
+var _szMark = 'каталог для своего канала';
 function _szBrandOK(){
   try {
     var f = document.querySelector('footer');
     if (!f) return false;
     var us = f.querySelector('.us');
     if (!us) return false;
-    if (!us.offsetParent) return false;   /* block hidden via display:none etc. */
+    if (!us.offsetParent) return false;   /* блок спрятан (display:none и т.п.) */
     var cs = getComputedStyle(us);
     if (cs.display === 'none' || cs.visibility === 'hidden' || parseInt(cs.opacity, 10) === 0) return false;
     if (us.textContent.indexOf(_szMark) === -1) return false;
@@ -675,7 +638,7 @@ function _szBrandOK(){
       (cfg.ref_bot && cfg.ref_code && bh.indexOf('https://t.me/' + cfg.ref_bot + '?start=r' + cfg.ref_code) === 0));
     var okSite = sh.indexOf('https://') === 0 && sh.indexOf(_szSite) !== -1;
     return okBot && okSite;
-  } catch(e){ return true; }   /* exotic environment — do not block the catalog */
+  } catch(e){ return true; }   /* экзотическое окружение — не блокируем каталог */
 }
 function _szBrandStop(){
   try {
@@ -695,11 +658,11 @@ function _szBrandStop(){
       + 'align-items:center;justify-content:center">'
       + '<svg width="30" height="30" viewBox="0 0 24 24" fill="none">'
       + '<path d="M7 10V8a5 5 0 0 1 10 0v2h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V8a3 3 0 0 0-6 0v2Z" fill="#fff"/></svg></div>'
-      + '<h1 style="font-size:20px;color:#0F2437;margin:0 0 10px">Table of Contents is unavailable</h1>'
+      + '<h1 style="font-size:20px;color:#0F2437;margin:0 0 10px">Оглавление недоступно</h1>'
       + '<p style="font-size:15px;line-height:1.55;color:#48607A;margin:0">'
-      + 'The product has been tampered with: the authorship block (signature and links to the author) was removed or altered on this page.'
-      + '<br>The catalog only works in its original, unmodified form.'
-      + '<br>To restore it, write to the chat of the bot you opened this page from.</p>'
+      + 'Нарушена комплектация продукта: из страницы удалён или изменён блок авторства.'
+      + '<br>Каталог работает только в исходной комплектации — с подписью и ссылками на автора.'
+      + '<br>Для восстановления напишите в чат бота, из которого вы открыли эту страницу.</p>'
       + '</div>';
     document.body.appendChild(ov);
     ['list','chips','state'].forEach(function(id){
@@ -707,7 +670,7 @@ function _szBrandStop(){
       if (el) el.innerHTML = '';
     });
   } catch(e){}
-  throw new Error('SZ branding guard');   /* abort the current load flow */
+  throw new Error('SZ branding guard');   /* прерываем текущий поток загрузки */
 }
 setInterval(function(){ if (!_szBrandOK()) { try { _szBrandStop(); } catch(e){} } }, 25000);
 
@@ -716,32 +679,32 @@ function esc(s){
     return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
   });
 }
-var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-var MONTHS_NOM = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+var MONTHS_NOM = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 function dayLabel(iso){
   var d = new Date(iso + 'T00:00:00');
   var today = new Date(); today.setHours(0,0,0,0);
   var yst = new Date(today.getTime() - 86400000);
   var t = new Date(d.getTime());
-  if (t.getTime() === today.getTime()) return 'Today';
-  if (t.getTime() === yst.getTime()) return 'Yesterday';
+  if (t.getTime() === today.getTime()) return 'Сегодня';
+  if (t.getTime() === yst.getTime()) return 'Вчера';
   var now = new Date();
-  var label = MONTHS[d.getMonth()] + ' ' + d.getDate();
-  if (d.getFullYear() !== now.getFullYear()) label += ', ' + d.getFullYear();
+  var label = d.getDate() + ' ' + MONTHS[d.getMonth()];
+  if (d.getFullYear() !== now.getFullYear()) label += ' ' + d.getFullYear();
   return label;
 }
 function normTag(s){ return String(s||'').replace(/^#/,'').toLowerCase(); }
 
-/* ── app state ── */
-var POSTS = [];        // all posts (newest first)
+/* ── состояние приложения ── */
+var POSTS = [];        // все посты (новые сверху)
 var TAGS = [];         // [{tag, n}]
-var TOPICS = null;     // [{id,title,icon,tags[]}] from topics.json (may be absent)
+var TOPICS = null;     // [{id,title,icon,tags[]}] из topics.json (может не быть)
 var view = 'feed';     // 'toc' | 'feed'
-var filterTopic = null;// id of the selected topic (topics mode)
-var filterMode = null; // universal grouping: 'months' | 'alpha' | 'kind' | 'topics'
-var tocGroup = null;   // selected group inside filterMode
-var filterTag = null;  // selected tag filter (as "Feed")
-var filterQ = '';      // search query
+var filterTopic = null;// id выбранной темы (режим тем)
+var filterMode = null; // универсальная группировка: 'months' | 'alpha' | 'kind'
+var tocGroup = null;   // выбранная группа внутри filterMode
+var filterTag = null;  // выбранный тег-фильтр (в виде «Лента»)
+var filterQ = '';      // поисковая строка
 var shown = PAGE_SIZE;
 
 function topicOf(p){
@@ -756,17 +719,17 @@ function topicOf(p){
   return null;
 }
 
-/* ── universal grouping: months / alphabet / post type ── */
+/* ── универсальная группировка без тегов: месяцы / алфавит / тип постов ── */
 var MODES = [
-  {id:'months', icon:'📅', title:'By month'},
-  {id:'alpha',  icon:'🔤', title:'By alphabet'},
-  {id:'kind',   icon:'🎭', title:'By post type'}
+  {id:'months', icon:'📅', title:'По месяцам'},
+  {id:'alpha',  icon:'🔤', title:'По алфавиту'},
+  {id:'kind',   icon:'🎭', title:'По типу постов'}
 ];
 var KIND_META = {
-  text:{icon:'📝', title:'Texts'}, photo:{icon:'📷', title:'Photos'},
-  video:{icon:'🎬', title:'Videos'}, audio:{icon:'🎧', title:'Audio'},
-  poll:{icon:'📊', title:'Polls'}, file:{icon:'📎', title:'Files'},
-  sticker:{icon:'🎭', title:'Stickers'}
+  text:{icon:'📝', title:'Тексты'}, photo:{icon:'📷', title:'Фото'},
+  video:{icon:'🎬', title:'Видео'}, audio:{icon:'🎧', title:'Аудио'},
+  poll:{icon:'📊', title:'Опросы'}, file:{icon:'📎', title:'Файлы'},
+  sticker:{icon:'🎭', title:'Стикеры'}
 };
 function kindOf(p){
   if (p.kind && KIND_META[p.kind]) return p.kind;
@@ -782,7 +745,7 @@ function groupKey(p, mode){
   var md = mode || filterMode;
   if (md === 'months') return (p.date || '').slice(0,7);
   if (md === 'alpha'){
-    var t = (p.title || '').replace(/^[^0-9a-z\u0430-\u044f\u0451]+/i, '');
+    var t = (p.title || '').replace(/^[^0-9a-zа-яё]+/i, '');
     return (t.charAt(0) || '#').toUpperCase();
   }
   return kindOf(p);
@@ -806,18 +769,18 @@ function groupCards(mode){
 }
 function groupLabel(k){
   if (filterMode === 'months') return monthLabel(k);
-  if (filterMode === 'kind') return (KIND_META[k] || {title:'Texts'}).title;
-  return 'Starting with «' + k + '»';
+  if (filterMode === 'kind') return (KIND_META[k] || {title:'Тексты'}).title;
+  return 'На «' + k + '»';
 }
 function groupIcon(k){
   if (filterMode === 'months') return '📅';
   if (filterMode === 'kind') return (KIND_META[k] || {icon:'📝'}).icon;
-  return k; // alphabet: the letter itself is the icon
+  return k; // алфавит: буква сама — иконка
 }
 
-/* ── "By topics" (v54-en): counter for the root card.
-   If topics from topics.json cover posts — count topic cards
-   (+ "Misc"), otherwise — the number of post tags. */
+/* ── «По темам» (v56-ru): счётчик для карточки корня. Если темы из
+   topics.json покрывают посты — считаются карточки тем (+ «Разное»),
+   иначе — число тегов постов. ── */
 function topicCardCount(){
   if (TOPICS){
     var n = 0, covered = 0;
@@ -829,59 +792,58 @@ function topicCardCount(){
     });
     if (covered > 0){
       var misc = POSTS.length - covered, total = n + (misc > 0 ? 1 : 0);
-      return { n: total, word: pluralWord(total, ['topic','topics','topics']) };
+      return { n: total, word: pluralWord(total, ['тема','темы','тем']) };
     }
   }
-  return { n: TAGS.length, word: pluralWord(TAGS.length, ['tag','tags','tags']) };
+  return { n: TAGS.length, word: pluralWord(TAGS.length, ['тег','тега','тегов']) };
 }
-
-/* ── header from config ── */
+/* ── шапка из конфига ── */
 function applyConfig(){
-  var name = cfg.channel_name || 'Contents';
+  var name = cfg.channel_name || 'Оглавление';
   document.title = name;
   document.getElementById('hName').textContent = name;
-  document.getElementById('hOpen').textContent = cfg.channel_button || 'Channel';
+  document.getElementById('hOpen').textContent = cfg.channel_button || 'Канал';
   if (cfg.channel_url) {
     var a = document.getElementById('hOpen');
     a.href = cfg.channel_url;
     a.addEventListener('click', function(ev){
       haptic('light');
-      // mini app → openPost: openTelegramLink, and on a silent iOS failure —
-      // a visible browser fallback (the MyRadio strategy);
-      // desktop browser without tg → do NOT intercept: the plain href works
+      // мини-апп → openUrl: openTelegramLink, при тихом сбое iOS —
+      // видимый запасной путь через браузер (стратегия живого приложения);
+      // десктоп-браузер без моста → НЕ перехватываем: работает обычный href
       if (tg || iOS) {
-        ev.preventDefault(); openPost(cfg.channel_url);
+        ev.preventDefault(); openUrl(cfg.channel_url);
       }
     });
   } else { document.getElementById('hOpen').style.display = 'none'; }
   if (cfg.header_emoji) document.getElementById('logo').textContent = cfg.header_emoji;
-  var lic = cfg.licensee ? ('licensed to: ' + cfg.licensee + (cfg.license_id ? ' · license ' + cfg.license_id : '')) : '';
+  var lic = cfg.licensee ? ('экземпляр для: ' + cfg.licensee + (cfg.license_id ? ' · лицензия ' + cfg.license_id : '')) : '';
   document.getElementById('licLine').textContent = lic;
 }
-   /* ── footer "about us" (boss 30.10.2026: every instance footer carries
-      our info with links to the bot and the website). Override via config.js
-      (footer_bot/footer_site); a kit with a referral code keeps the owner's
-      personal payload (start=r<code>) — Task 142 billboard lives on. ── */
+   /* ── футер «о нас» (босс 30.10.2026: «во всех экземплярах миниаппов в футере —
+      информация про нас и ссылки как на сайт, так и в бота»). Адреса можно
+      переопределить в config.js (footer_bot/footer_site); у комплекта с рефкодом
+      ссылка на бот несёт payload владельца (start=r<код>) — билборд Task 142 жив. ── */
    var fB = document.getElementById('footBot');
    if (fB) {
      var fHref = cfg.footer_bot || 'https://t.me/oglavlenie_shop_bot';
      if (cfg.ref_bot) {
        fHref = 'https://t.me/' + cfg.ref_bot + (cfg.ref_code ? ('?start=r' + cfg.ref_code) : '');
-       fB.textContent = '\u26a1 Catalog by Oglavlenie';
+       fB.textContent = '\u26a1 \u041a\u0430\u0442\u0430\u043b\u043e\u0433 \u043e\u0442 \u041e\u0433\u043b\u0430\u0432\u043b\u0435\u043d\u0438\u0435';
      }
      fB.href = fHref;
    }
    var fS = document.getElementById('footSite');
    if (fS) fS.href = cfg.footer_site || 'https://oglavlenie.github.io/';
 
-/* ── filtering and render ── */
+/* ── фильтрация и рендер ── */
 function pluralWord(n, forms){
   var a = n % 10, b = n % 100;
   if (a === 1 && b !== 11) return forms[0];
   if (a >= 2 && a <= 4 && (b < 10 || b >= 20)) return forms[1];
   return forms[2];
 }
-function plural(n){ return pluralWord(n, ['post','posts','posts']); }
+function plural(n){ return pluralWord(n, ['пост','поста','постов']); }
 function filtered(){
   var q = filterQ.trim().toLowerCase();
   var inToc = view === 'toc' && !filterQ.trim();
@@ -902,7 +864,7 @@ function renderChips(){
   box.innerHTML = '';
   var chipAll = document.createElement('div');
   chipAll.className = 'chip' + (filterTag ? '' : ' active');
-  chipAll.textContent = 'All topics';
+  chipAll.textContent = 'Все темы';
   chipAll.onclick = function(){ hapticSelect(); filterTag = null; shown = PAGE_SIZE; render(); };
   box.appendChild(chipAll);
   TAGS.slice(0, 14).forEach(function(t){
@@ -917,7 +879,7 @@ function renderChips(){
     box.appendChild(c);
   });
 }
-/* ── view switch: Contents / Feed ── */
+/* ── вид «Оглавление»: темы либо универсальные разделы + возврат ── */
 function renderViews(){
   var box = document.getElementById('views');
   if (!POSTS.length){ box.style.display = 'none'; return; }
@@ -943,7 +905,6 @@ function hideBack(){
   if (b) b.style.display = 'none';
   updateTgBack();
 }
-/* ── icons for tag cards (v54-en): frequent tags → emoji, else a label icon ── */
 var TAG_ICONS = {
   russia:'🇷🇺', россия:'🇷🇺', worldnews:'🌍', мировыеновости:'🌍',
   conflict:'⚔️', конфликт:'⚔️', society:'🏙️', общество:'🏙️',
@@ -956,12 +917,11 @@ var TAG_ICONS = {
 function tagIcon(tag){
   return TAG_ICONS[normTag(tag)] || '🏷️';
 }
-/* ── "By topics" screen (v54-en): cards everywhere. Curated topic cards
-   from topics.json (only if they really cover posts) + every post tag
-   as its own card (icon + counter). Tap a card → the filtered list
-   of the corresponding posts. ── */
+/* ── экран «По темам» (v54-ru): карточки тем из topics.json (если реально
+   покрывают посты) + каждый тег постов своей карточкой. Тап по карточке —
+   отфильтрованный список постов. ── */
 function renderTopicsScreen(){
-  showBack('← Contents', function(){ filterMode = null; filterTopic = null; filterTag = null; tocGroup = null; shown = PAGE_SIZE; render(); });
+  showBack('← Оглавление', function(){ filterMode = null; filterTopic = null; filterTag = null; tocGroup = null; shown = PAGE_SIZE; render(); });
   renderState(null);
   var list = document.getElementById('list');
   var html = '';
@@ -983,7 +943,7 @@ function renderTopicsScreen(){
       if (misc){
         html += '<div class="tcard" data-topic="__misc">' +
                   '<div class="t-ico">🗂</div>' +
-                  '<div class="t-title">Misc</div>' +
+                  '<div class="t-title">Разное</div>' +
                   '<div class="t-n">' + misc + ' ' + plural(misc) + '</div>' +
                 '</div>';
       }
@@ -991,7 +951,7 @@ function renderTopicsScreen(){
     }
   }
   if (TAGS.length){
-    html += '<div class="slabel">All topics</div><div class="tgrid">';
+    html += '<div class="slabel">Все темы</div><div class="tgrid">';
     TAGS.forEach(function(t){
       var nt = normTag(t.tag);
       html += '<div class="tcard" data-ttag="' + esc(nt) + '">' +
@@ -1028,22 +988,22 @@ function renderModeGrid(){
   hideBack();
   renderState(null);
   var list = document.getElementById('list');
-  /* v54-en: the contents root — ALWAYS four equal cards:
-     three universal ones (months/alphabet/types) + "By topics" (topics and tags).
-     The "topics instead of sections" mode is gone — cards never disappear. */
+  /* v54-ru: корень оглавления — ВСЕГДА четыре равные карточки:
+     три универсальные (месяцы/алфавит/типы) + «По темам» (темы и теги).
+     Карточки никогда не пропадают и не смешиваются с содержимым разделов. */
   var html = '<div class="tgrid">';
   MODES.forEach(function(m){
     var gn = groupCards(m.id).length;
     html += '<div class="tcard" data-mode="' + m.id + '">' +
               '<div class="t-ico">' + m.icon + '</div>' +
               '<div class="t-title">' + m.title + '</div>' +
-              '<div class="t-n">' + gn + ' ' + pluralWord(gn, ['section','sections','sections']) + '</div>' +
+              '<div class="t-n">' + gn + ' ' + pluralWord(gn, ['раздел','раздела','разделов']) + '</div>' +
             '</div>';
   });
   var tn = topicCardCount();
   html += '<div class="tcard" data-mode="topics">' +
             '<div class="t-ico">🏷</div>' +
-            '<div class="t-title">By topics</div>' +
+            '<div class="t-title">По темам</div>' +
             '<div class="t-n">' + tn.n + ' ' + tn.word + '</div>' +
           '</div>';
   html += '</div>';
@@ -1061,7 +1021,7 @@ function renderModeGrid(){
   if (more) more.style.display = 'none';
 }
 function renderGroupCards(){
-  showBack('← Contents',
+  showBack('← Оглавление',
            function(){ filterMode = null; tocGroup = null; shown = PAGE_SIZE; render(); });
   renderState(null);
   var list = document.getElementById('list');
@@ -1101,7 +1061,7 @@ function renderList(items){
     html += '<a class="card"' + (p.url ? ' href="' + esc(p.url) + '" target="_blank" rel="noopener"' : '') + '>' +
               '<div class="c-top">' +
                 (p.time ? '<span class="c-time">' + esc(p.time) + '</span>' : '') +
-                '<span class="c-title">' + esc(p.title || 'Post') + '</span>' +
+                '<span class="c-title">' + esc(p.title || 'Пост') + '</span>' +
               '</div>' +
               (p.preview ? '<div class="c-prev">' + esc(p.preview) + '</div>' : '') +
               (tags ? '<div class="c-tags">' + tags + '</div>' : '') +
@@ -1111,18 +1071,19 @@ function renderList(items){
   list.innerHTML = html;
   list.querySelectorAll('a.card[href]').forEach(function(el){
     el.addEventListener('click', function(ev){
-      if (ev.metaKey || ev.ctrlKey) return;   // ctrl/⌘+click — new tab is handled by the browser
+      if (ev.metaKey || ev.ctrlKey) return;   // ctrl/⌘+клик — новую вкладку открывает браузер
       haptic('light');
-      // mini app → openPost: navigation into Telegram, and on a silent iOS
-      // failure (the mini app opened from the same channel) — visible browser fallback;
-      // desktop browser without tg → do NOT intercept: the real href works
+      // мини-апп → openUrl: переход внутрь Telegram, при тихом сбое iOS
+      // (мини-апп открыт из того же канала) — видимый запасной путь через
+      // браузер; десктоп-браузер без моста → НЕ перехватываем: работает
+      // настоящая ссылка
       if (tg || iOS) {
         ev.preventDefault();
-        /* instant visual feedback while Telegram performs the navigation
-           (up to 1.5 s) — the tap does not feel "dead" (MyRadio experience) */
+        /* мгновенная визуальная отдача, пока Telegram выполняет переход
+           (до 1.5 с) — тап не ощущается «мёртвым» (опыт живого приложения) */
         el.classList.add('pressed');
         setTimeout(function(){ el.classList.remove('pressed'); }, 300);
-        openPost(el.getAttribute('href'));
+        openUrl(el.getAttribute('href'));
       }
     });
   });
@@ -1134,7 +1095,7 @@ function renderList(items){
       more.onclick = function(){ haptic('light'); shown += PAGE_SIZE; render(); };
       document.getElementById('list').after(more);
     }
-    more.textContent = 'Show more (' + (items.length - shown) + ')';
+    more.textContent = 'Показать ещё (' + (items.length - shown) + ')';
     more.style.display = 'block';
   } else if (more){ more.style.display = 'none'; }
 }
@@ -1146,12 +1107,12 @@ function renderState(kind, extra){
   if (!kind){ st.style.display = 'none'; list.style.display = ''; return; }
   list.style.display = 'none';
   st.style.display = 'block';
-  if (kind === 'empty')   st.innerHTML = '<div class="big">📭</div><div class="t">Nothing here yet</div><div>Posts will appear here right after the first publication or import.</div>';
-  if (kind === 'nomatch') st.innerHTML = '<div class="big">🔍</div><div class="t">Nothing found</div><div>Try changing the query or picking another topic.</div>';
+  if (kind === 'empty')   st.innerHTML = '<div class="big">📭</div><div class="t">Пока пусто</div><div>Посты появятся здесь сразу после первой публикации или импорта.</div>';
+  if (kind === 'nomatch') st.innerHTML = '<div class="big">🔍</div><div class="t">Ничего не найдено</div><div>Попробуйте изменить запрос или выбрать другую тему.</div>';
   if (kind === 'error'){
     document.getElementById('chips').style.display = 'none';
-    st.innerHTML = '<div class="big">⚠️</div><div class="t">Failed to load the table of contents</div><div>' + esc(extra||'') + '</div>'
-      + '<button type="button" class="more" id="retryBtn" style="max-width:220px;margin:18px auto 0">Retry</button>';
+    st.innerHTML = '<div class="big">⚠️</div><div class="t">Не удалось загрузить оглавление</div><div>' + esc(extra||'') + '</div>'
+      + '<button type="button" class="more" id="retryBtn" style="max-width:220px;margin:18px auto 0">Повторить</button>';
     var rb = document.getElementById('retryBtn');
     if (rb) rb.onclick = function(){ haptic('light'); load(); loadTopics(); };
   }
@@ -1160,10 +1121,10 @@ function render(){
   var items = filtered();
   var q = filterQ.trim();
   var inToc = view === 'toc' && !q;
-  var sub = POSTS.length ? ('A catalog of ' + POSTS.length + ' ' + plural(POSTS.length)) : 'A catalog of the channel’s posts';
+  var sub = POSTS.length ? ('каталог постов · ' + POSTS.length + ' ' + plural(POSTS.length)) : 'каталог постов канала';
   if (inToc && filterMode && filterMode !== 'topics' && !tocGroup){
     var gn = groupCards().length;
-    sub = gn + ' ' + pluralWord(gn, ['section','sections','sections']);
+    sub = gn + ' ' + pluralWord(gn, ['раздел','раздела','разделов']);
   } else if (inToc && filterMode === 'topics' && !filterTopic && !filterTag){
     var tc = topicCardCount();
     sub = tc.n + ' ' + tc.word;
@@ -1172,15 +1133,15 @@ function render(){
   renderViews();
   document.getElementById('chips').style.display = inToc ? 'none' : '';
   if (!POSTS.length){ renderChips(); return renderState('empty'); }
-  if (inToc && !filterMode && !filterTopic && !tocGroup && !filterTag){ renderModeGrid(); return; }  // v54-en root: 4 cards
+  if (inToc && !filterMode && !filterTopic && !tocGroup && !filterTag){ renderModeGrid(); return; }  // v54-ru корень: 4 карточки
   if (inToc && filterMode === 'topics' && !filterTopic && !filterTag){ renderTopicsScreen(); return; }
   if (inToc && filterMode && filterMode !== 'topics' && !tocGroup){ renderGroupCards(); return; }
   if (inToc && filterTopic){
-    showBack('← Topics', function(){ filterTopic = null; shown = PAGE_SIZE; render(); });
+    showBack('← По темам', function(){ filterTopic = null; shown = PAGE_SIZE; render(); });
   } else if (inToc && filterMode && tocGroup){
-    showBack('← Sections', function(){ tocGroup = null; shown = PAGE_SIZE; render(); });
+    showBack('← Разделы', function(){ tocGroup = null; shown = PAGE_SIZE; render(); });
   } else if (inToc && filterTag){
-    showBack('← Topics', function(){ filterTag = null; shown = PAGE_SIZE; render(); });
+    showBack('← По темам', function(){ filterTag = null; shown = PAGE_SIZE; render(); });
   } else { hideBack(); }
   renderChips();
   if (!items.length) return renderState('nomatch');
@@ -1189,7 +1150,7 @@ function render(){
   document.getElementById('list').style.display = '';
 }
 
-/* ── search ── */
+/* ── поиск ── */
 var qEl = document.getElementById('q'), clrEl = document.getElementById('clr');
 qEl.addEventListener('input', function(){
   filterQ = qEl.value; shown = PAGE_SIZE;
@@ -1201,7 +1162,7 @@ clrEl.addEventListener('click', function(){
   qEl.value = ''; filterQ = ''; clrEl.style.display = 'none'; shown = PAGE_SIZE; render(); qEl.focus();
 });
 
-/* ── view switch: Contents / Feed ── */
+/* ── переключатель вида: Оглавление / Лента ── */
 document.getElementById('vToc').addEventListener('click', function(){
   hapticSelect();
   view = 'toc'; filterTopic = null; filterTag = null; filterMode = null; tocGroup = null; shown = PAGE_SIZE; render();
@@ -1211,21 +1172,21 @@ document.getElementById('vFeed').addEventListener('click', function(){
   view = 'feed'; filterTopic = null; filterTag = null; filterMode = null; tocGroup = null; shown = PAGE_SIZE; render();
 });
 
-/* ── data loading ── */
-var RAW_TOPICS = null;    // contents of topics.json (if present)
-var POSTS_READY = false;  // posts.json loaded
+/* ── загрузка данных ── */
+var RAW_TOPICS = null;    // содержимое topics.json (если есть)
+var POSTS_READY = false;  // posts.json загружен
 function tryApplyTopics(){
   if (!RAW_TOPICS || !POSTS_READY) return;
   var ts = (RAW_TOPICS && RAW_TOPICS.topics) || [];
   TOPICS = ts.filter(function(t){ return t && t.id && (t.tags||[]).length; });
   if (!TOPICS.length) TOPICS = null;
-  render();   // v54-en: topics live inside the "By topics" card — the root is always the same
+  render();   // v56-ru: темы живут внутри карточки «По темам» — корень всегда одинаковый
 }
 function loadTopics(){
   fetch('topics.json?v=' + Date.now(), {cache:'no-store'})
     .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(data){ RAW_TOPICS = data; tryApplyTopics(); })
-    .catch(function(){ if (POSTS_READY) render(); });   // topics.json missing/unavailable — the current view stays
+    .catch(function(){ if (POSTS_READY) render(); });   // topics.json нет/недоступен — остаётся текущий вид
 }
 function boot(data){
   var posts = Array.isArray(data) ? data : (data.posts || []);
@@ -1240,7 +1201,7 @@ function boot(data){
     var ka = a.date + ' ' + a.time, kb = b.date + ' ' + b.time;
     return ka < kb ? 1 : (ka > kb ? -1 : 0);
   });
-  if (!POSTS_READY && cfg.default_view !== 'feed') view = 'toc';   // default view — only on first load
+  if (!POSTS_READY && cfg.default_view !== 'feed') view = 'toc';   // вид по умолчанию — только при первой загрузке
   var counts = {};
   POSTS.forEach(function(p){ (p.tags||[]).forEach(function(t){
     var k = normTag(t); if (!k) return;
@@ -1254,10 +1215,10 @@ function boot(data){
   tryApplyTopics();
 }
 
-/* ── data loading: instant start from cache + silent refresh ──
-   posts.json is saved to localStorage after each successful load:
-   on a slow network the table of contents opens instantly (the saved
-   copy), then silently refreshes; without network the copy is shown. */
+/* ── загрузка данных: мгновенный старт из кэша + тихое обновление ──
+   posts.json после каждой успешной загрузки сохраняется в localStorage:
+   на медленной сети оглавление открывается мгновенно (сохранённая копия),
+   затем тихо обновляется; без сети показывается копия. */
 var CACHE_KEY = 'sz_posts_v1';
 function cacheRead(){
   try {
@@ -1275,7 +1236,7 @@ function stampFresh(t){
     if (f) f.insertBefore(el, document.getElementById('licLine'));
   }
   var d = new Date(t), z = function(x){ return ('0' + x).slice(-2); };
-  el.textContent = 'data updated: ' + z(d.getDate()) + '.' + z(d.getMonth() + 1) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
+  el.textContent = 'данные обновлены: ' + z(d.getDate()) + '.' + z(d.getMonth() + 1) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes());
 }
 function bootFromCache(){
   var cached = cacheRead();
@@ -1283,7 +1244,7 @@ function bootFromCache(){
   try {
     var cd = JSON.parse(cached.raw);
     var cn = Array.isArray(cd) ? cd.length : ((cd && cd.posts) ? cd.posts.length : 0);
-    if (cn) { boot(cd); stampFresh(cached.t); }   // empty cache is not shown — let the network decide
+    if (cn) { boot(cd); stampFresh(cached.t); }   // пустой кэш не показываем — пусть решает сеть
     return cached;
   } catch(e){ return null; }
 }
@@ -1294,29 +1255,29 @@ function load(){
     .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
     .then(function(txt){
       try { localStorage.setItem(CACHE_KEY, JSON.stringify({t: Date.now(), raw: txt})); } catch(e){}
-      if (cached && txt === cached.raw){ stampFresh(Date.now()); return; }   // data unchanged
+      if (cached && txt === cached.raw){ stampFresh(Date.now()); return; }   // данные не изменились
       boot(JSON.parse(txt));
       stampFresh(Date.now());
     })
     .catch(function(e){
-      if (!POSTS_READY) renderState('error', 'posts.json is unavailable or empty. Check the configuration per the guide (' + e.message + ').');
+      if (!POSTS_READY) renderState('error', 'Файл posts.json недоступен или пуст. Проверьте настройку по гайду (' + e.message + ').');
     });
 }
 
-/* ── start ── */
+/* ── старт ── */
 applyConfig();
 wireTgBack();
 diagInit();
 maybeBridgeBanner();
 
-/* share button: copies the link to this mini app */
+/* кнопка «Поделиться»: копирует ссылку на этот мини-апп */
 document.getElementById('hShare').addEventListener('click', function(){
   haptic('light');
   var http = location.protocol === 'http:' || location.protocol === 'https:';
   var url = http ? (location.origin + location.pathname) : (cfg.channel_url || location.href);
   copyText(url, function(ok){
-    if (ok){ hapticNotify('success'); toast('Table of contents link copied'); }
-    else { hapticNotify('error'); toast('Failed to copy the link'); }
+    if (ok){ hapticNotify('success'); toast('Ссылка на оглавление скопирована'); }
+    else { hapticNotify('error'); toast('Не удалось скопировать ссылку'); }
   });
 });
 
@@ -1325,7 +1286,7 @@ licenseValid(cfg.licensee, cfg.license_key).then(function(ok){
   if (!ok){
     var b = document.getElementById('banner');
     b.style.display = 'block';
-    b.textContent = 'License key not verified. Demo mode is active — enter the correct details in config.js or contact the seller.';
+    b.textContent = 'Лицензионный ключ не подтверждён. Работает демонстрационный режим — впишите корректные данные в config.js или обратитесь к продавцу.';
   }
 });
 
@@ -1352,10 +1313,10 @@ licenseValid(cfg.licensee, cfg.license_key).then(function(ok){
         + 'align-items:center;justify-content:center">'
         + '<svg width="30" height="30" viewBox="0 0 24 24" fill="none">'
         + '<path d="M7 10V8a5 5 0 0 1 10 0v2h1a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h1Zm2 0h6V8a3 3 0 0 0-6 0v2Z" fill="#fff"/></svg></div>'
-        + '<h1 style="font-size:20px;color:#0F2437;margin:0 0 10px">Table of contents unavailable</h1>'
+        + '<h1 style="font-size:20px;color:#0F2437;margin:0 0 10px">Оглавление недоступно</h1>'
         + '<p style="font-size:15px;line-height:1.55;color:#48607A;margin:0">'
-        + 'Access has been revoked: the license was withdrawn by the seller.<br>'
-        + 'To restore it, write to the chat of the bot you opened this page from.</p>'
+        + 'Доступ к оглавлению прекращён: лицензия отозвана.<br>'
+        + 'Для восстановления напишите в чат бота, из которого вы открыли эту страницу.</p>'
         + '</div>';
       document.body.appendChild(ov);
     })
