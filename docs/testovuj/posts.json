@@ -1,11 +1,25 @@
 {
   "version": 1,
-  "updated_at": "2026-11-05T21:15:05+03:00",
+  "updated_at": "2026-11-05T21:34:22+03:00",
   "channel": {
     "name": "DemoTest",
     "url": "https://t.me/Testovuj"
   },
   "posts": [
+    {
+      "id": 605,
+      "date": "2026-11-05",
+      "time": "21:29",
+      "title": "🌳 Христианское радио в Telegram. Бесплатно.",
+      "preview": "🌳 Христианское радио в Telegram. Бесплатно.",
+      "tags": [
+        "#христианство",
+        "#радио"
+      ],
+      "kind": "text",
+      "url": "https://t.me/Testovuj/605",
+      "src": ""
+    },
     {
       "id": 604,
       "date": "2026-11-05",
