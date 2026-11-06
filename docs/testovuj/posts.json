@@ -1,20 +1,32 @@
 {
   "version": 1,
-  "updated_at": "2026-11-05T22:20:51+03:00",
+  "updated_at": "2026-11-06T11:21:57+03:00",
   "channel": {
     "name": "DemoTest",
     "url": "https://t.me/Testovuj"
   },
   "posts": [
     {
+      "id": 607,
+      "date": "2026-11-06",
+      "time": "11:17",
+      "title": "📖 План чтения Библии",
+      "preview": "Помню, в юности ко мне в руки попал необычный план чтения Библии — хронологический. Там фрагменты библейского текста выстроились не в привычном всем порядке синодального перевода, ",
+      "tags": [
+        "#библия",
+        "#планчтениябиблии"
+      ],
+      "kind": "text",
+      "url": "https://t.me/Testovuj/607",
+      "src": ""
+    },
+    {
       "id": 606,
       "date": "2026-11-05",
       "time": "22:19",
       "title": "https://www.facebook.com/kolomiytsevacom",
       "preview": "",
-      "tags": [
-        "#разное"
-      ],
+      "tags": [],
       "kind": "text",
       "url": "https://t.me/Testovuj/606",
       "src": ""
