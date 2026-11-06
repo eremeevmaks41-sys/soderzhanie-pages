@@ -254,7 +254,7 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v61-ru</span></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v62-ru</span></div>
     <div class="us">Такой же каталог для своего канала: <a id="footBot" href="https://t.me/oglavlenie_shop_bot" target="_blank" rel="noopener">🤖 бот «Оглавление»</a> · <a id="footSite" href="https://oglavlenie.github.io/" target="_blank" rel="noopener">🌐 сайт</a></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
@@ -514,9 +514,16 @@ function maybeBridgeBanner(){
      iOS  → WebApp.close(): пост уже открыт позади, close() его покажет
             (openLink вне жеста пользователя Telegram молча отбрасывает,
             а на iOS он ещё и открывает внешний Safari);
-     иные → tg.openLink(): встроенный браузер, видимый рабочий путь. */
+     иные → tg.openLink(): встроенный браузер, видимый рабочий путь.
+   wantLeave (кнопка «Канал», репорт босса 6.11.2026): цель тапа — УЙТИ
+   из мини-аппа, поэтому тихий случай лечится иначе. На Android канал
+   открывается ПОЗАДИ мини-аппа и приложение не сворачивается (iOS и
+   десктоп сворачиваются сами) — «создаётся впечатление, что ничего не
+   происходит». Тот же детектор, другой ответ: не свернулся за 1.5 с →
+   WebApp.close() — мини-апп свернётся, канал уже на экране позади;
+   если close не поддержан — видимый openLink как раньше. */
 var TG_LINK_FALLBACK_MS = 1500;
-function openInTelegram(url){
+function openInTelegram(url, wantLeave){
   var settled = false;
   function onVisChange(){
     if (document.hidden){
@@ -531,6 +538,20 @@ function openInTelegram(url){
   setTimeout(function(){
     document.removeEventListener('visibilitychange', onVisChange);
     if (settled) return;
+    /* wantLeave («Канал»): цель тапа — уйти из мини-аппа, канал уже
+       открыт позади — сворачиваем сами; карточки постов идут ниже */
+    if (wantLeave && tg.close){
+      diagNote('не свернулся за 1.5 с → close() (канал уже открыт позади)');
+      try { tg.close(); } catch(e){}
+      /* последний шанс, если close клиентом не поддержан */
+      setTimeout(function(){
+        if (!settled && tg.openLink){
+          diagNote('close не сработал → openLink');
+          try { tg.openLink(url, {try_instant_view:false}); } catch(e){}
+        }
+      }, 800);
+      return;
+    }
     if (tg.platform === 'ios' && tg.close){
       diagNote('не свернулся за 1.5 с → close() (пост уже открыт позади)');
       try { tg.close(); } catch(e){}
@@ -547,7 +568,7 @@ function openInTelegram(url){
     }
   }, TG_LINK_FALLBACK_MS);
 }
-function openUrl(url){
+function openUrl(url, wantLeave){
   if (!url) return;
   if (!tg && bridgePending){
     /* мост ещё едет (async): коротко дождёмся, чтобы тап не ушёл в запасную
@@ -555,15 +576,15 @@ function openUrl(url){
     diagNote('мост ещё грузится — жду его до 1.2 с');
     var t0 = Date.now();
     (function again(){
-      if (tg){ diagNote('мост доехал — открываю штатно'); openUrl(url); return; }
-      if (!bridgePending || Date.now() - t0 > 1200){ routeOpen(url); return; }
+      if (tg){ diagNote('мост доехал — открываю штатно'); openUrl(url, wantLeave); return; }
+      if (!bridgePending || Date.now() - t0 > 1200){ routeOpen(url, wantLeave); return; }
       setTimeout(again, 60);
     })();
     return;
   }
-  routeOpen(url);
+  routeOpen(url, wantLeave);
 }
-function routeOpen(url){
+function routeOpen(url, wantLeave){
   if (!url) return;
   if (!tg){
     /* вне мини-аппа (в т.ч. встроенный браузер Telegram из кнопки канала):
@@ -582,7 +603,7 @@ function routeOpen(url){
   var NATIVE_APP_PLATFORMS = {tdesktop:1, macos:1, ios:1, android:1, android_x:1};
   var canUseTelegramLink = !!tg.openTelegramLink
     && (!tg.isVersionAtLeast || tg.isVersionAtLeast('7.0'));
-  if (NATIVE_APP_PLATFORMS[plat] && canUseTelegramLink) { openInTelegram(url); return; }
+  if (NATIVE_APP_PLATFORMS[plat] && canUseTelegramLink) { openInTelegram(url, wantLeave); return; }
   /* неизвестная платформа или клиент старше Bot API 7.0 — старый добрый
      openLink(): гарантированно видимый рабочий путь */
   try { tg.openLink(url, {try_instant_view:false}); } catch(e){}
@@ -807,11 +828,13 @@ function applyConfig(){
     a.href = cfg.channel_url;
     a.addEventListener('click', function(ev){
       haptic('light');
-      // мини-апп → openUrl: openTelegramLink, при тихом сбое iOS —
-      // видимый запасной путь через браузер (стратегия живого приложения);
+      // мини-апп → openUrl(wantLeave): openTelegramLink; на Android канал
+      // открывается позади НЕсвёрнутого мини-аппа (репорт 6.11.2026) —
+      // тихий случай гасим close(), затем видимый запасной путь браузера
+      // (стратегия живого приложения);
       // десктоп-браузер без моста → НЕ перехватываем: работает обычный href
       if (tg || iOS) {
-        ev.preventDefault(); openUrl(cfg.channel_url);
+        ev.preventDefault(); openUrl(cfg.channel_url, true);
       }
     });
   } else { document.getElementById('hOpen').style.display = 'none'; }
