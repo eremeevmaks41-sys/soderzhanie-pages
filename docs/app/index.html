@@ -17,7 +17,7 @@ window.__TOC_DEFAULT = 'testovuj';
      перезагружает страницу с ?cbv=<ver> — URL другой, устаревший кэш мимо;
      дальше этот URL переиспользуется и честно ревалидируется по ETag.
      Один раз за сессию (sessionStorage); если cbv уже в query — молчим. */
-  var CBV = 'v72';   /* общий ключ кэша обоих шеллов (ru/en): бамп двумя файлами разом */
+  var CBV = 'v73';   /* общий ключ кэша обоих шеллов (ru/en): бамп двумя файлами разом (v73 = нулевое состояние кабинета, v1.7.45) */
   if (location.search.indexOf('cbv=') !== -1) return;
   try {
     var s = window.sessionStorage;
@@ -367,7 +367,7 @@ footer b{font-family:'Unbounded','Manrope',sans-serif;font-weight:600}
   <div id="state" class="state" style="display:none"></div>
 
   <footer>
-    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v72-ru</span></div>
+    <div><b>Оглавление</b> · каталог постов Telegram-канала · <span id="ver">v73-ru</span></div>
     <div class="us">Такой же каталог для своего канала: <a id="footBot" href="https://t.me/oglavlenie_shop_bot" target="_blank" rel="noopener">🤖 бот «Оглавление»</a> · <a id="footSite" href="https://oglavlenie.github.io/" target="_blank" rel="noopener">🌐 сайт</a> · <a id="footTry" href="https://t.me/oglavlenie_try_bot" target="_blank" rel="noopener">🧪 примерь на своём</a></div>
     <div class="lic" id="licLine"></div><div class="lic"><a id="refLine" href="#" target="_blank" rel="noopener" style="display:none;color:inherit"></a></div>
   </footer>
@@ -1604,8 +1604,11 @@ loadTopics();
     : (navLang.toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en')));
   var TXT = ({
     ru: {
-      no_sub_t: 'Пока нет подключений',
-      no_sub_m: 'Откройте бота — там можно подключить свой канал: 7 дней бесплатно, оглавление собираем мы.',
+      /* v1.7.45 (аудит босса 7.11.2026): формулировка босса — баннер
+         «У вас пока нет активных каталогов…» + кнопка «Подключить канал». */
+      no_sub_t: 'Пока нет активных каталогов',
+      no_sub_m: 'У вас пока нет активных каталогов. Подключите свой канал через меню бота: 7 дней бесплатно, оглавление собираем мы.',
+      connect: 'Подключить канал',
       prep_t: 'Готовим оглавление',
       prep_m: 'Бот принят в канал, каталог собирается автоматически — обычно до получаса. Сообщение придёт само.',
       trial_t: 'Пробный период',
@@ -1643,7 +1646,7 @@ loadTopics();
       copied: 'Сводка скопирована',
       copy_fail: 'Не получилось скопировать',
       exp_t: 'Личный кабинет',
-      exp_none: 'Подключений пока нет',
+      exp_none: 'Активных каталогов пока нет',
       ref_t: 'Партнёрка',
       ref_stats: 'Приглашено: {a} · оплатили: {k} · наград: {r}',
       ref_tier: 'Уровень {t} · до следующего уровня: {n} оплативших',
@@ -1695,8 +1698,9 @@ loadTopics();
       ref_err_server: 'Не получилось — попробуйте ещё раз чуть позже.'
     },
     en: {
-      no_sub_t: 'No connections yet',
-      no_sub_m: 'Open the bot to connect your channel: 7 days free, we build the table of contents for you.',
+      no_sub_t: 'No active catalogs yet',
+      no_sub_m: 'You have no active catalogs yet. Connect your channel via the bot menu: 7 days free, we build the table of contents for you.',
+      connect: 'Connect a channel',
       prep_t: 'Preparing the contents',
       prep_m: 'The bot is in the channel, the catalog is being built automatically — usually under 30 minutes. A message will arrive on its own.',
       trial_t: 'Trial period',
@@ -1734,7 +1738,7 @@ loadTopics();
       copied: 'Summary copied',
       copy_fail: 'Could not copy',
       exp_t: 'My account',
-      exp_none: 'No connections yet',
+      exp_none: 'No active catalogs yet',
       ref_t: 'Referrals',
       ref_stats: 'Invited: {a} · paid: {k} · rewards: {r}',
       ref_tier: 'Level {t} · {n} paying referrals to the next level',
@@ -1982,6 +1986,15 @@ loadTopics();
         toast(ok ? TXT.ref_copied : TXT.copy_fail);
       });
     });
+    /* v1.7.45: «Подключить канал» в нулевом состоянии — закрыть мини-апп
+       (чат бота уже под ним), вне Telegram — ссылка на бота. */
+    var cn = document.getElementById('szc-connect');
+    if (cn) cn.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      haptic('light');
+      if (w && w.close) { try { w.close(); } catch (e) {} }
+      else if (d.bot_link) { location.href = d.bot_link; }
+    });
     var tabs = [document.getElementById('szc-tab-main'),
                 document.getElementById('szc-tab-ref'),
                 document.getElementById('szc-tab-extra')];
@@ -2043,6 +2056,19 @@ loadTopics();
     if (body) b.push(para(esc(body)));
     for (var i = 0; i < rows.length; i++) {
       if (rows[i][0]) b.push(btn(rows[i][0], rows[i][1], false));
+    }
+    /* v1.7.45 (аудит босса 7.11.2026): нулевое состояние кабинета — заглушка
+       с кнопкой «Подключить канал». Кнопка ЗАКРЫВАЕТ мини-апп: пользователь
+       возвращается в чат бота, меню закреплено под чатом (урок Task 163:
+       openTelegramLink на чат ТОГО ЖЕ бота из мини-аппа не даёт видимого
+       перехода, а close() — стандартный надёжный путь, как в возврате).
+       Вне Telegram (браузерный фолбэк Direct-Link) — переход по bot_link. */
+    if (!sub.has) {
+      b.push('<a href="#" id="szc-connect" style="display:block;text-decoration:none;'
+        + 'text-align:center;margin:12px 0 6px;padding:13px 14px;border-radius:12px;'
+        + 'background:linear-gradient(135deg,#2AABEE 0%,#7C6CFF 100%);color:#fff;'
+        + 'font-weight:700;box-shadow:0 6px 18px rgba(42,171,238,.30);'
+        + '">' + esc(TXT.connect) + '</a>');
     }
     if (sub.has) {
       b.push('<div style="font-size:15px;font-weight:600;margin:22px 0 2px">'
