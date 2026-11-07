@@ -1,0 +1,101 @@
+{
+ "version": 1,
+ "topics": [
+  {
+   "id": "fonbetovertime",
+   "title": "#FONBETOVERTIME",
+   "icon": "🏷️",
+   "tags": [
+    "#fonbetovertime"
+   ]
+  },
+  {
+   "id": "тывигре",
+   "title": "#ТыВИгре",
+   "icon": "🏷️",
+   "tags": [
+    "#тывигре"
+   ]
+  },
+  {
+   "id": "хоккей",
+   "title": "#хоккей",
+   "icon": "🏷️",
+   "tags": [
+    "#хоккей"
+   ]
+  },
+  {
+   "id": "fiz6",
+   "title": "#fiz6",
+   "icon": "🏷️",
+   "tags": [
+    "#fiz6"
+   ]
+  },
+  {
+   "id": "fonbetшоу",
+   "title": "#FONBETШоу",
+   "icon": "🏷️",
+   "tags": [
+    "#fonbetшоу"
+   ]
+  },
+  {
+   "id": "j7",
+   "title": "#J7",
+   "icon": "🏷️",
+   "tags": [
+    "#j7"
+   ]
+  },
+  {
+   "id": "jaecoo",
+   "title": "#JAECOO",
+   "icon": "🏷️",
+   "tags": [
+    "#jaecoo"
+   ]
+  },
+  {
+   "id": "jaecoo_россия",
+   "title": "#JAECOO_Россия",
+   "icon": "🏷️",
+   "tags": [
+    "#jaecoo_россия"
+   ]
+  },
+  {
+   "id": "khlallstar",
+   "title": "#KHLAllStar",
+   "icon": "🏷️",
+   "tags": [
+    "#khlallstar"
+   ]
+  },
+  {
+   "id": "papajohnspizza",
+   "title": "#papajohnspizza",
+   "icon": "🏷️",
+   "tags": [
+    "#papajohnspizza"
+   ]
+  },
+  {
+   "id": "papajohnsru",
+   "title": "#papajohnsru",
+   "icon": "🏷️",
+   "tags": [
+    "#papajohnsru"
+   ]
+  },
+  {
+   "id": "большаяигра",
+   "title": "#БольшаяИгра",
+   "icon": "🏷️",
+   "tags": [
+    "#большаяигра"
+   ]
+  }
+ ]
+}
