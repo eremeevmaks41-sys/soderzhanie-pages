@@ -1,20 +1,87 @@
 {
   "version": 1,
-  "updated_at": "2026-11-08T12:27:48+03:00",
+  "updated_at": "2026-11-10T10:37:51+03:00",
   "channel": {
     "name": "DemoTest",
     "url": "https://t.me/Testovuj"
   },
   "posts": [
     {
+      "id": 619,
+      "date": "2026-11-10",
+      "time": "10:34",
+      "title": "5",
+      "preview": "",
+      "tags": [],
+      "kind": "document",
+      "url": "https://t.me/Testovuj/619",
+      "src": ""
+    },
+    {
+      "id": 618,
+      "date": "2026-11-10",
+      "time": "10:34",
+      "title": "4",
+      "preview": "",
+      "tags": [],
+      "kind": "document",
+      "url": "https://t.me/Testovuj/618",
+      "src": ""
+    },
+    {
+      "id": 617,
+      "date": "2026-11-10",
+      "time": "10:33",
+      "title": "3",
+      "preview": "",
+      "tags": [],
+      "kind": "document",
+      "url": "https://t.me/Testovuj/617",
+      "src": ""
+    },
+    {
+      "id": 616,
+      "date": "2026-11-10",
+      "time": "10:33",
+      "title": "2",
+      "preview": "",
+      "tags": [],
+      "kind": "document",
+      "url": "https://t.me/Testovuj/616",
+      "src": ""
+    },
+    {
+      "id": 615,
+      "date": "2026-11-10",
+      "time": "10:32",
+      "title": "1",
+      "preview": "",
+      "tags": [],
+      "kind": "document",
+      "url": "https://t.me/Testovuj/615",
+      "src": ""
+    },
+    {
+      "id": 614,
+      "date": "2026-11-10",
+      "time": "10:32",
+      "title": "жизнь в период катастроф",
+      "preview": "",
+      "tags": [
+        "#катастрофы",
+        "#философия"
+      ],
+      "kind": "text",
+      "url": "https://t.me/Testovuj/614",
+      "src": ""
+    },
+    {
       "id": 612,
       "date": "2026-11-08",
       "time": "12:24",
       "title": "Все посты этого канала теперь в каталоге «Оглавление»",
       "preview": "Темы, месяцы, поиск: нужный пост находится за пару кликов — без бесконечной прокрутки. Проверьте сами: кнопка «📖 Оглавление» в закрепе этого канала. Хотите такой же каталог? Перехо",
-      "tags": [
-        "#разное"
-      ],
+      "tags": [],
       "kind": "text",
       "url": "https://t.me/Testovuj/612",
       "src": ""
@@ -571,9 +638,7 @@
       "time": "12:40",
       "title": "Личный кабинет",
       "preview": "Пробный период · @testovuj осталось 7 дней · до 22.09.2026 https://t.me/oglavlenie_shop_bot",
-      "tags": [
-        "#разное"
-      ],
+      "tags": [],
       "kind": "text",
       "url": "https://t.me/Testovuj/496",
       "src": ""
