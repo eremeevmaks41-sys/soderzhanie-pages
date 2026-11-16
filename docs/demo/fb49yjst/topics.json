@@ -1,0 +1,101 @@
+{
+ "version": 1,
+ "topics": [
+  {
+   "id": "linux",
+   "title": "#linux",
+   "icon": "🏷️",
+   "tags": [
+    "#linux"
+   ]
+  },
+  {
+   "id": "ai",
+   "title": "#ai",
+   "icon": "🏷️",
+   "tags": [
+    "#ai"
+   ]
+  },
+  {
+   "id": "devops",
+   "title": "#devops",
+   "icon": "🏷️",
+   "tags": [
+    "#devops"
+   ]
+  },
+  {
+   "id": "железо",
+   "title": "#железо",
+   "icon": "🏷️",
+   "tags": [
+    "#железо"
+   ]
+  },
+  {
+   "id": "разное",
+   "title": "#разное",
+   "icon": "🏷️",
+   "tags": [
+    "#разное"
+   ]
+  },
+  {
+   "id": "network",
+   "title": "#network",
+   "icon": "🏷️",
+   "tags": [
+    "#network"
+   ]
+  },
+  {
+   "id": "perfomance",
+   "title": "#perfomance",
+   "icon": "🏷️",
+   "tags": [
+    "#perfomance"
+   ]
+  },
+  {
+   "id": "remote",
+   "title": "#remote",
+   "icon": "🏷️",
+   "tags": [
+    "#remote"
+   ]
+  },
+  {
+   "id": "zabbix",
+   "title": "#zabbix",
+   "icon": "🏷️",
+   "tags": [
+    "#zabbix"
+   ]
+  },
+  {
+   "id": "менеджеры_подключений",
+   "title": "#менеджеры_подключений",
+   "icon": "🏷️",
+   "tags": [
+    "#менеджеры_подключений"
+   ]
+  },
+  {
+   "id": "статьи",
+   "title": "#статьи",
+   "icon": "🏷️",
+   "tags": [
+    "#статьи"
+   ]
+  },
+  {
+   "id": "ansible",
+   "title": "#ansible",
+   "icon": "🏷️",
+   "tags": [
+    "#ansible"
+   ]
+  }
+ ]
+}
