@@ -1528,7 +1528,7 @@ licenseValid(cfg.licensee, cfg.license_key).then(function(ok){
 
 /* ── статус лицензии у продавца (Task 170): «отозвана» → заглушка; сбой сети не блокирует ── */
 (function(){
-  var LIC_API = 'https://sales-bot-private.onrender.com/lic';
+  var LIC_API = 'https://sales-bot-private-bc1t.onrender.com/lic';
   if (!cfg.license_id) return;
   fetch(LIC_API + '?lic_id=' + encodeURIComponent(cfg.license_id)
         + '&licensee=' + encodeURIComponent(cfg.licensee || ''),
@@ -1565,7 +1565,7 @@ loadTopics();
 </script>
 <script>
 /* SZ-CAB main (Task 129/130) — личный кабинет клиента: экран поверх витрины.
-   Данные: POST https://sales-bot-private.onrender.com/api/cabinet с initData — подпись проверяет сервер
+   Данные: POST https://sales-bot-private-bc1t.onrender.com/api/cabinet с initData — подпись проверяет сервер
    (main.verify_init_data, официальная схема Telegram). Кабинет только читает:
    автосписаний нет, все кнопки оплаты ведут в бота (t.me), страница
    оглавления открывается нативно. Язык: ?cablang= → язык Telegram-аккаунта.
@@ -1574,7 +1574,7 @@ loadTopics();
    «скопировать сводку» (буфер обмена с фолбэком + тост). */
 (function () {
   if (!window.__TOC_CABINET) return;
-  var API = 'https://sales-bot-private.onrender.com';
+  var API = 'https://sales-bot-private-bc1t.onrender.com';
   var w = window.Telegram && window.Telegram.WebApp;
   var tgUser = (w && w.initDataUnsafe && w.initDataUnsafe.user) || {};
   /* Task 132: токен кабинета из startapp (_cab_<uid>_<exp>_<sig>) — путь для
